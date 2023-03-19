@@ -32,7 +32,9 @@ Route::prefix('tiktok')->group(function() {
 Route::prefix('campaign')->group(function () {
     Route::get('', [CampaignController::class, 'index']);
     Route::get('/{id}', [CampaignController::class, 'detail']);
+    Route::get('/{id}/intent', [CampaignController::class, 'intent']);
     Route::post('/create', [CampaignController::class, 'create']);
+    Route::get('/{id}/report', [CampaignController::class, 'report']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);

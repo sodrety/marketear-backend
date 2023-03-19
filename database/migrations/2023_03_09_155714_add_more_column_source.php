@@ -23,6 +23,8 @@ class AddMoreColumnSource extends Migration
             $table->json('other_share_count')->nullable();
             $table->foreignIdFor(Creator::class, 'creator_id');
             $table->string('caption')->nullable();
+            $table->string('full_url')->nullable();
+            $table->text('thumbnail')->nullable();
         });
     }
     
@@ -40,8 +42,10 @@ class AddMoreColumnSource extends Migration
             $table->dropColumn('share_count');
             $table->dropColumn('play_count');
             $table->dropColumn('other_share_count');
-            $table->dropColumn('other_share_count');
+            $table->dropColumn('creator_id');
             $table->dropColumn('caption');
+            $table->dropColumn('full_url');
+            $table->dropColumn('thumbnail');
         });
     }
 }

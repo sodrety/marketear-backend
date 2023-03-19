@@ -19,6 +19,8 @@ class CreateCreatorsTable extends Migration
             $table->string('username');
             $table->string('signature');
             $table->integer('channel_id');
+            $table->boolean('is_verified')->default(false);
+            $table->json('stats')->nullable();
             $table->timestamps();
         });
     }

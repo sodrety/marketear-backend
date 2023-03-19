@@ -24,7 +24,6 @@ class SrapeSource implements ShouldQueue
      */
     public function __construct($campaignId)
     {
-        Log::debug("masuk". json_encode($campaignId));
         $this->campaignId = $campaignId;
     }
 
