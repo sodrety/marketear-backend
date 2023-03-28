@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  myapp:
+    build: .
+#    network_mode: host
+    environment:
+      - LARAVEL_PORT_NUMBER=5758
+    ports:
+      - 5758:5758
