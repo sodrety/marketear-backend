@@ -39,7 +39,7 @@ class SrapeService
             ]);
         }
 
-        $predict = Http::post("http://127.0.0.1:5000/api/predict", $intent);
+        $predict = Http::post(env("ML_URL", 'http://localhost:5000')."/api/predict", $intent);
 
         if ($predict->failed() || $predict->clientError() || $predict->serverError()) {
             $predict->throw()->json();
