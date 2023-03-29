@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class CampaignSourceHistory extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
 }
