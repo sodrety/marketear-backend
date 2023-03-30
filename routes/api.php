@@ -38,3 +38,7 @@ Route::prefix('campaign')->group(function () {
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);
+
+Route::get("test", function() {
+    echo "masuk";
+});
