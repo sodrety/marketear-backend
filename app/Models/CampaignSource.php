@@ -10,6 +10,7 @@ class CampaignSource extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    protected $table = "campaign_sources";
 
     public function channel()
     {

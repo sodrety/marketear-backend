@@ -35,6 +35,10 @@ Route::prefix('campaign')->group(function () {
     Route::get('/{id}/intent', [CampaignController::class, 'intent']);
     Route::post('/create', [CampaignController::class, 'create']);
     Route::get('/{id}/report', [CampaignController::class, 'report']);
+
+});
+Route::prefix("intent")->group(function() {
+    Route::post("change", [CampaignController::class, 'changeIntent']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);

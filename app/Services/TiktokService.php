@@ -6,6 +6,7 @@ use App\Models\CampaignSource;
 use App\Models\Creator;
 use App\Models\Intent;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class TiktokService 
 {
@@ -150,6 +151,8 @@ class TiktokService
             ]);
             return false;
         }
+
+        Log::debug("response => ".json_encode($response));
 
         if (!$response) {
             return false;
