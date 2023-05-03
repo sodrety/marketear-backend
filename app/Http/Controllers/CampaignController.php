@@ -10,7 +10,6 @@ use App\Services\CampaignService;
 use App\Services\CreatorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class CampaignController extends Controller
 {
@@ -27,7 +26,7 @@ class CampaignController extends Controller
             $per_page = 15;
         }
 
-        $data = Campaign::select('campaigns.*')->addSelect(DB::raw('(select count(id) from campaign_sources as cs where cs.campaign_id=campaigns.id) as source'))->orderBy('id', 'desc')->simplePaginate($per_page);
+        $data = Campaign::select('campaigns.*')->addSelect(DB::raw('(select count(id) from campaign_sources as cs where cs.campaign_id=campaigns.id) as source'))->simplePaginate($per_page);
 
         return $data;
         // return response()->json([
@@ -65,11 +64,9 @@ class CampaignController extends Controller
         // Create campaign
         $campaign = $this->campaignService->createCampaign($request->all());
 
-        Log::debug("campaign => ".json_encode($campaign));
         //dispatch job to scrape comments
-        // $queue = new SrapeSource($campaign->id);
-        SrapeSource::dispatch($campaign->id);
-        // $this->dispatch($queue)->delay(now()->addRealSeconds(5));
+        $queue = new SrapeSource($campaign->id);
+        $this->dispatch($queue);
         // dispatch(new SrapeSource($campaign->id));
 
         return response()->json([
@@ -84,7 +81,6 @@ class CampaignController extends Controller
             $q->on('i.campaign_source_id', '=', 'campaign_sources.id')
             ->where('campaign_id', $id);
         })
-        ->orderBy('i.id')
         ->simplePaginate(10);
 
         return $data;
@@ -138,19 +134,5 @@ class CampaignController extends Controller
 
         return $result;
 
-    }
-
-    public function changeIntent(Request $request)
-    {
-        $intentId = $request->id;
-        $intent = $request->intent;
-
-        Intent::where('id', $intentId)->update(['sentiment' => $intent]);
-
-        return response()->json([
-            'status' => true,
-            'intent' => $intent,
-            'message' => "Success Update Intent"
-        ]);
     }
 }

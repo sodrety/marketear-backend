@@ -6,7 +6,6 @@ use App\Models\CampaignSource;
 use App\Models\Creator;
 use App\Models\Intent;
 use Exception;
-use Illuminate\Support\Facades\Log;
 
 class TiktokService 
 {
@@ -31,7 +30,7 @@ class TiktokService
             return false;
         }
         $target = 10;
-        $per_page = 10;
+        $per_page = 30;
         $cursor = 0;
         $result = [];
         try {
@@ -83,13 +82,15 @@ class TiktokService
                             'picture' => $c->user->avatar_thumb->url_list[0],
                             'text' => $c->text,
                             'cid' => $c->cid,
+                            'sentiment' => 'Neutral',
+                            'score' => 0,
                             'comment_at' => date('Y/m/d H:i:s', $c->create_time)
                         ]
                     );
-                    $result[] = [
+                    array_push($result,[
                         'text' => $c->text,
                         'id' => $intent->id
-                    ];
+                    ]);
                 }
                 $cursor+= $per_page;
             }
@@ -99,7 +100,7 @@ class TiktokService
                 'response' => json_encode($e),
                 'url' => "https://scraptik.p.rapidapi.com/list-comments?aweme_id=".$data['url']."&count=$per_page&cursor=$cursor",
             ]);
-            return false;
+            return [];
         }
 
         // UPDATE CAMPAIGN SOURCE ID
@@ -152,8 +153,6 @@ class TiktokService
             return false;
         }
 
-        Log::debug("response => ".json_encode($response));
-
         if (!$response) {
             return false;
             // // return response()->json([
@@ -173,6 +172,7 @@ class TiktokService
         ]);
         $source->caption = $res->aweme_detail->desc;
         $source->thumbnail = $res->aweme_detail->video->cover->url_list[0];
+        $source->created_at = \Carbon\Carbon::parse($res->aweme_detail->create_time);
         $source->save();
                     
         return $source;
@@ -230,6 +230,7 @@ class TiktokService
         $creator = Creator::create([
             'name' => $res->userInfo->user->nickname,
             'username' => $res->userInfo->user->uniqueId,
+            'thumbnail' => $res->userInfo->user->avatarThumb,
             'signature' => $res->userInfo->user->signature,
             'stats' => json_encode($res->userInfo->stats),
             'channel_id' => $channelId

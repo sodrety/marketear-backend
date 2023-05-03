@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\TiktokController;
+use App\Http\Controllers\WorkspaceController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Services\SrapeService;
@@ -35,10 +36,16 @@ Route::prefix('campaign')->group(function () {
     Route::get('/{id}/intent', [CampaignController::class, 'intent']);
     Route::post('/create', [CampaignController::class, 'create']);
     Route::get('/{id}/report', [CampaignController::class, 'report']);
-
 });
-Route::prefix("intent")->group(function() {
-    Route::post("change", [CampaignController::class, 'changeIntent']);
+
+Route::prefix('workspace')->group(function () {
+    Route::post('/create', [WorkspaceController::class, 'create']);
+    Route::get('/categories',[WorkspaceController::class, 'getCategory']);
+    Route::get('/list', [WorkspaceController::class, 'getWorkspace']);
+    Route::get('/reintent', [WorkspaceController::class, 'reintent']);
+    Route::get('/recreator', [WorkspaceController::class, 'recreator']);
+    Route::get('/detail/{id}', [WorkspaceController::class, 'getDetail']);
+    Route::get('/creator/{username}', [WorkspaceController::class, 'getCreator']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);
