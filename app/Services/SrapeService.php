@@ -3,11 +3,10 @@
 namespace App\Services;
 
 use App\Models\CampaignSource;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class SrapeService
+class SrapeService 
 {
 
     protected $tiktokService;
@@ -15,44 +14,42 @@ class SrapeService
     {
         $this->tiktokService = $tiktokService;
     }
-    public function scrape($campaignId = 51)
-    {   
-        Log::debug("campaign id => ".json_encode($campaignId));
-        $source = CampaignSource::where('campaign_id', $campaignId)->get();
-        // dd($source);
-        // $source = DB::table('campaign_sources')->all();
-        // return Log::debug("campaign => ".json_encode($source));
+    public function scrape($workspaceId = 79)
+    {
+        // $source = CampaignSource::where("campaign_id", $campaignId)->with('channel')->get();
+        $source = CampaignSource::where("workspace_id", $workspaceId)->with('channel')->get();
         if (count($source) < 1) {
             return Log::info("Theres no url to scrape");
         }
         $intent = [];
+        $response = [];
         foreach($source as $url) {
-            switch($url->channel->name) {
-                case 'tiktok':
-                    $response = $this->tiktokService->tiktokScrape($url);
-                break;
-                case 'instagram':
-                    $response = $this->tiktokService->tiktokScrape($url);
-                break;
-            }
-            $intent = array_merge($intent, $response);
+            // switch($url->channel->name) {
+            //     case 'tiktok':
+            if ($url->channel->name == 'tiktok') $response = $this->tiktokService->tiktokScrape($url);
+                // break;
+                // case 'instagram':
+                //     $response = $this->tiktokService->tiktokScrape($url);
+                // break;
+            // }
+            if (is_array($response) && count($response)) $intent = array_merge($intent, $response);
         }
         
-        if(!$response || (is_array($response) && count($response) < 1)) {
+        if(!$intent || (is_array($intent) && count($intent) < 1)) {
             return response()->json([
                 'status' => false,
-            ]);
+            ], 500);
         }
-        Log::debug("data predict => ".json_encode($intent));
-        $predict = Http::post(env("ML_URL", 'http://127.0.0.1:5000')."/api/predict", $intent);
 
-        if ($predict->failed() || $predict->clientError() || $predict->serverError()) {
-            $predict->throw()->json();
-        }
+        // $predict = Http::post(env("ML_URL", 'http://localhost:5000')."/api/predict", $intent);
+
+        // if ($predict->failed() || $predict->clientError() || $predict->serverError()) {
+        //     $predict->throw()->json();
+        // }
 
         return response()->json([
             'status' => true,
-        ]);
+        ], 200);
 
         
     }

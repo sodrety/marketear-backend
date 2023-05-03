@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class ChangeCaptionColumn extends Migration
+class AddThumbnailColumnCreatorsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class ChangeCaptionColumn extends Migration
      */
     public function up()
     {
-        Schema::table('campaign_sources', function(Blueprint $table) {
-            $table->text('caption')->change();
-        }); 
+        Schema::table('creators', function (Blueprint $table) {
+            $table->text('thumbnail')->after('username')->nullable();
+        });
     }
-    
+
     /**
      * Reverse the migrations.
      *
@@ -25,8 +25,6 @@ class ChangeCaptionColumn extends Migration
      */
     public function down()
     {
-        Schema::table('campaign_sources', function(Blueprint $table) {
-            $table->string('caption')->change();
-        }); 
+        //
     }
 }

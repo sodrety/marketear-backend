@@ -10,7 +10,6 @@ class CampaignSource extends Model
 {
     use HasFactory;
     protected $guarded = [];
-    protected $table = "campaign_sources";
 
     public function channel()
     {
@@ -20,5 +19,15 @@ class CampaignSource extends Model
     public function historys()
     {
         return $this->hasMany(CampaignSourceHistory::class);
+    }
+
+    public function creator ()
+    {
+        return $this->hasOne(Creator::class, 'id','creator_id');
+    }
+
+    public function intents ()
+    {
+        return $this->hasMany(Intent::class);
     }
 }

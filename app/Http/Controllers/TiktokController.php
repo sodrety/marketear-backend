@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Campaign;
 use App\Models\CampaignSource;
 use App\Models\Intent;
+use Illuminate\Support\Facades\Auth;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -56,7 +57,7 @@ class TiktokController extends Controller
         foreach($request->url as $url) {
           // dd($url);
           $tiktokId = explode('/', $url['value'])[5];
-          $campaignSource = CampaignSource::create(['url' => $tiktokId, 'campaign_id' => $campaign->id]);
+          $campaignSource = CampaignSource::create(['url' => $tiktokId, 'campaign_id' => $campaign->id, 'channel_id' => 1, 'creator_id' => 1]);
         }
         // $comments = json_decode($response);
         // dd($comments);
