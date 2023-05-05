@@ -16,7 +16,7 @@ class CreateWorkspacesTable extends Migration
         Schema::create('workspaces', function (Blueprint $table) {
             $table->id();
             $table->text('name');
-            $table->enum('type', ['Campaign', 'Keyword']);
+            $table->enum('type', ['campaign', 'keyword']);
             $table->foreignId('category_id')->references('id')->on('workspace_categories')->onDelete('cascade');
             $table->timestamps();
         });
