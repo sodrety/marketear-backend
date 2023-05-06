@@ -80,6 +80,38 @@ class WorkspaceController extends Controller
         }
     }
 
+    public function createUrl (Request $request)
+    {
+        $validated_array = [
+            'id' => 'required',
+            'type' => 'required',
+            'url' => 'required'
+        ];
+
+        $validated = Validator::make($request->all(), $validated_array);
+        
+        if ($validated->fails()) {
+            return response()->json($validated->errors(), 500);
+        } else {
+            try {
+                $workspace = $this->workspaceService->createUrl($request->all(), $request->id);
+
+                if ($workspace && $request->type == 'Campaign') {
+                    $queue = new SrapeSource($request->id);
+                    $this->dispatch($queue);
+                }
+
+                return response()->json([
+                    'status' => true,
+                    'message' => $workspace
+                ], 200);
+            } catch (\Exception $e) {
+                return response()->json($e->getMessage(), 500);
+            }
+    
+        }
+    }
+
     public function reintent (Request $request)
     {
         if ($request->id) {
