@@ -1,0 +1,66 @@
+name: Laravel
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  laravel-tests:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+      with:
+        php-version: '7.4'
+    - uses: actions/checkout@v3
+      with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    - name: Check 'marketear' service url
+      uses: jtalk/url-health-check-action@v1.2
+      with:
+        url: ${{.secrets.URL_PROD }}
+        max-attempts: 3
+        retry-delay: 5s
+
+    - name: Deploy to prod instance and change permission prod instance
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST_PROD }}
+        username: ${{ secrets.SSH_USERNAME_ADMIN }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT_PROD }}
+        script: |
+          cd /var/www/sites
+          sudo chown -R ${{ secrets.SSH_USERNAME_ADMIN }}:${{ secrets.SSH_USERNAME_ADMIN }} backend
+          cd /var/www/sites/backend
+          git checkout production
+          git fetch
+          git pull origin production
+          cd /var/www/sites
+          exit
+    - name: Install Dependencies and clear cach artisan
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST_PROD }}
+        username: ${{ secrets.SSH_USERNAME_ADMIN }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT_PROD }}
+        script: |
+          cd /var/www/sites/backend
+          composer install
+          php artisan optimize:clear
+          exit
+    - name: Change permission folder and file on instance
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST_PROD }}
+        username: ${{ secrets.SSH_USERNAME_ADMIN }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.SSH_PORT_PROD }}
+        script: |
+          cd /var/www/sites
+          sudo chown -R www-data:www-data backend
+          cd /var/www/sites/backend
+          sudo chmod -R ug+rwx storage bootstrap/cache
+          exit
