@@ -40,6 +40,7 @@ Route::prefix('campaign')->group(function () {
 
 Route::prefix('workspace')->group(function () {
     Route::post('/create', [WorkspaceController::class, 'create']);
+    Route::post('/url-create', [WorkspaceController::class, 'createUrl']);
     Route::get('/categories',[WorkspaceController::class, 'getCategory']);
     Route::get('/list', [WorkspaceController::class, 'getWorkspace']);
     Route::get('/reintent', [WorkspaceController::class, 'reintent']);
