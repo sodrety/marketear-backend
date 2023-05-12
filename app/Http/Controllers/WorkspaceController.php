@@ -80,6 +80,47 @@ class WorkspaceController extends Controller
         }
     }
 
+    public function update (Request $request, $id)
+    {
+        $validated_array = [
+            'name' => 'required',
+            'category' => 'required|numeric',
+        ];
+        $validated = Validator::make($request->all(), $validated_array);
+        if ($validated->fails()) {
+            return response()->json($validated->errors(), 500);
+        } else {
+            try {
+                $request['category_id'] = $request['category'];
+                $workspace = Workspace::findOrFail($id);
+                $workspace->update($request->all());
+
+                return response()->json([
+                    'status' => true,
+                    'message' => $workspace
+                ], 200);
+            } catch (\Exception $e) {
+                return response()->json($e->getMessage(), 500);
+            }
+    
+        }
+    }
+
+    public function deleteWorkspace ($id)
+    {
+        try {
+            $workspace = Workspace::findOrFail($id);
+            $workspace->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => $workspace
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
+    }    
+ 
     public function createUrl (Request $request)
     {
         $validated_array = [

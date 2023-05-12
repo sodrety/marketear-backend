@@ -32,7 +32,7 @@ Route::prefix('tiktok')->group(function() {
     Route::post('/scrape', [TiktokController::class, 'scrape']);
 });
 
-Route::prefix('campaign')->group(function () {
+Route::middleware('auth:sanctum')->prefix('campaign')->group(function () {
     Route::get('', [CampaignController::class, 'index']);
     Route::get('/{id}', [CampaignController::class, 'detail']);
     Route::get('/{id}/intent', [CampaignController::class, 'intent']);
@@ -40,7 +40,7 @@ Route::prefix('campaign')->group(function () {
     Route::get('/{id}/report', [CampaignController::class, 'report']);
 });
 
-Route::prefix('workspace')->group(function () {
+Route::middleware('auth:sanctum')->prefix('workspace')->group(function () {
     Route::post('/create', [WorkspaceController::class, 'create']);
     Route::post('/url-create', [WorkspaceController::class, 'createUrl']);
     Route::get('/categories',[WorkspaceController::class, 'getCategory']);
@@ -49,6 +49,8 @@ Route::prefix('workspace')->group(function () {
     Route::get('/recreator', [WorkspaceController::class, 'recreator']);
     Route::get('/detail/{id}', [WorkspaceController::class, 'getDetail']);
     Route::get('/creator/{username}', [WorkspaceController::class, 'getCreator']);
+    Route::put('/update/{id}', [WorkspaceController::class,'update']);
+    Route::post('/delete/{id}', [WorkspaceController::class,'deleteWorkspace']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);
