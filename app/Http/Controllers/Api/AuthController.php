@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Laravel\Socialite\Facades\Socialite;
 use Carbon\Carbon;
 use Auth;
 use Mail;
@@ -124,16 +125,15 @@ class AuthController extends Controller
         }
     }
 
-    public function loginWithOtp(Request $request)
+    public function verifyOtp(Request $request)
     {
         #Validation
         $request->validate([
-            'user_id' => 'required|exists:users,id',
             'otp' => 'required'
         ]);
 
         #Validation Logic
-        $verificationCode  = VerificationCode::where('user_id', $request->user_id)->where('otp', $request->otp)->first();
+        $verificationCode  = VerificationCode::where('user_id', Auth::user()->id)->where('otp', $request->otp)->first();
 
         $now = Carbon::now();
         if (!$verificationCode) {
@@ -148,18 +148,14 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $user = User::whereId($request->user_id)->first();
+        $user = User::whereId(Auth::user()->id)->first();
 
         if($user){
             // Expire The OTP
-            $verificationCode->update([
-                'expire_at' => null
-            ]);
-
+            $verificationCode->delete();
+            
             $user->email_verified_at = $now;
             $user->save();
-
-            Auth::login($user);
 
             return response()->json([
                 'status' => true,
@@ -180,6 +176,44 @@ class AuthController extends Controller
         ], 401);
     }
 
+    public function generateOtp() {
+        try {
+            
+            DB::beginTransaction();
+
+            $otp = rand(123456, 999999);
+            $verificationCode  = VerificationCode::where('user_id', Auth::user()->id)->first();
+
+            if (!$verificationCode) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You already verified',
+                ], 401);
+            }
+            
+            $verificationCode->otp = $otp;
+            $verificationCode->expire_at = Carbon::now()->addMinutes(10);
+            $verificationCode->save();
+
+            $details = ['otp' => $otp];
+
+            Mail::to('dibuattest@gmail.com')->send(new otpMail($details));
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'OTP send Successfully',
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
     public function logoutUser(Request $request) {
         try {
             auth()->user()->tokens()->delete();
@@ -196,6 +230,33 @@ class AuthController extends Controller
                 'message' => $th->getMessage()
             ], 500);
         }
+    }
+
+    public function handleProviderCallback(Request $request)
+    {
+        try {
+            $s_user = Socialite::with($request->provider)->stateless()->userFromToken($request->access_token);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+        $user = $this->findOrCreateUser($s_user, $request->provider);
+        if($request->login) $user->createToken("API TOKEN")->plainTextToken;
+    }
+
+    private function findOrCreateUser($socialLiteUser, $provider)
+    {
+        $user = User::firstOrNew([
+            'email' => $socialLiteUser->email,
+        ], [
+            $provider.'_id' => $socialLiteUser->id,
+            'role_id' => 2,
+            'name' => $socialLiteUser->name
+        ]);
+
+        return $user;
     }
 
 }
