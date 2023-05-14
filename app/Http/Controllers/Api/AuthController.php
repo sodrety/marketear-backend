@@ -57,7 +57,7 @@ class AuthController extends Controller
 
             $details = ['otp' => $otp];
 
-            Mail::to('dibuattest@gmail.com')->send(new otpMail($details));
+            Mail::to('satrahmadi@gmail.com')->send(new otpMail($details));
 
             DB::commit();
 
@@ -197,7 +197,7 @@ class AuthController extends Controller
 
             $details = ['otp' => $otp];
 
-            Mail::to('dibuattest@gmail.com')->send(new otpMail($details));
+            Mail::to('satrahmadi@gmail.com')->send(new otpMail($details));
 
             DB::commit();
 
@@ -232,18 +232,62 @@ class AuthController extends Controller
         }
     }
 
-    public function handleProviderCallback(Request $request)
+    public function updateUser(Request $request)
     {
         try {
-            $s_user = Socialite::with($request->provider)->stateless()->userFromToken($request->access_token);
+            //Validated
+            
+            DB::beginTransaction();
+            $validateUser = Validator::make($request->all(), 
+            [
+                'name' => 'required',
+                'password' => 'nullable|min:8',
+            ]);
+
+            if($validateUser->fails()){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'validation error',
+                    'errors' => $validateUser->errors()
+                ], 401);
+            }
+
+            $user = User::firstWhere('email',Auth::user()->email)->update([
+                'name' => $request->name,
+                'password' => $request->password ? Hash::make($request->password) : Auth::user()->password,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => $user,
+            ], 200);
+
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage()
             ], 500);
         }
-        $user = $this->findOrCreateUser($s_user, $request->provider);
-        if($request->login) $user->createToken("API TOKEN")->plainTextToken;
+    }
+
+    public function handleProviderCallback(Request $request)
+    {
+        try {
+            $s_user = Socialite::with($request->provider)->stateless()->userFromToken($request->access_token);
+            $user = $this->findOrCreateUser($s_user, $request->provider);
+            if($request->login) $user->createToken("API TOKEN")->plainTextToken;
+            return response()->json([
+                'status' => true,
+                'message' => $user
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
     }
 
     private function findOrCreateUser($socialLiteUser, $provider)
@@ -251,9 +295,11 @@ class AuthController extends Controller
         $user = User::firstOrNew([
             'email' => $socialLiteUser->email,
         ], [
+            'email' => $socialLiteUser->email,
             $provider.'_id' => $socialLiteUser->id,
             'role_id' => 2,
-            'name' => $socialLiteUser->name
+            'name' => $socialLiteUser->name,
+            'password' => Hash::make('default_password')
         ]);
 
         return $user;
