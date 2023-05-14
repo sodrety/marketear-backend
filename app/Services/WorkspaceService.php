@@ -8,6 +8,7 @@ use App\Models\WorkspaceUrl;
 use App\Models\Channel;
 use App\Models\CampaignSource;
 use App\Models\Creator;
+use Auth;
 
 class WorkspaceService
 {
@@ -18,7 +19,8 @@ class WorkspaceService
                 $workspace = Workspace::create([
                     'name' => $data['name'],
                     'type' => $data['type'],
-                    'category_id' => $data['category']
+                    'category_id' => $data['category'],
+                    'user_id' => Auth::user()->id
                 ]);
 
                 if ($workspace) {
