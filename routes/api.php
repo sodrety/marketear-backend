@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\TiktokController;
 use App\Http\Controllers\WorkspaceController;
@@ -28,7 +29,12 @@ Route::post('/auth/login', [AuthController::class, 'loginUser']);
 Route::post('/auth/logout', [AuthController::class, 'logoutUser']);
 Route::post('/auth/verifyotp', [AuthController::class, 'verifyOtp'])->middleware('auth:sanctum');
 Route::get('/auth/generateotp', [AuthController::class, 'generateOtp'])->middleware('auth:sanctum');
+Route::put('/auth/profile', [AuthController::class, 'updateUser'])->middleware('auth:sanctum');
 
+Route::post('/auth/forget-password', [ForgotPasswordController::class, 'submitForgetPasswordForm'])->name('forget.password.post'); 
+Route::post('/auth/reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
+
+Route::get('/auth/social', [AuthController::class, 'handleProviderCallback']);
 
 Route::prefix('tiktok')->group(function() {
     Route::post('/scrape', [TiktokController::class, 'scrape']);
