@@ -73,24 +73,26 @@ class TiktokService
                 $comments = json_decode($response);
 
                 foreach($comments->comments as $c) {
-                    $intent = Intent::create(
-                        [
-                            'campaign_source_id' => $data['id'], 
-                            'nickname' => $c->user->nickname, 
-                            'region' => $c->user->region,
-                            'language' => $c->user->language,
-                            'picture' => $c->user->avatar_thumb->url_list[0],
+                    if (isset($c->user)) {
+                        $intent = Intent::create(
+                            [
+                                'campaign_source_id' => $data['id'], 
+                                'nickname' => $c->user->nickname, 
+                                'region' => $c->user->region,
+                                'language' => $c->user->language,
+                                'picture' => $c->user->avatar_thumb->url_list[0],
+                                'text' => substr($c->text,0,254),
+                                'cid' => $c->cid,
+                                'sentiment' => 'Neutral',
+                                'score' => 0,
+                                'comment_at' => date('Y/m/d H:i:s', $c->create_time)
+                            ]
+                        );
+                        array_push($result,[
                             'text' => $c->text,
-                            'cid' => $c->cid,
-                            'sentiment' => 'Neutral',
-                            'score' => 0,
-                            'comment_at' => date('Y/m/d H:i:s', $c->create_time)
-                        ]
-                    );
-                    array_push($result,[
-                        'text' => $c->text,
-                        'id' => $intent->id
-                    ]);
+                            'id' => $intent->id
+                        ]);
+                    }
                 }
                 $cursor+= $per_page;
             }
@@ -162,17 +164,19 @@ class TiktokService
         $res = json_decode($response);
         
         $source = CampaignSource::where('id', $data['id'])->first();
-        $source->comment_count = $res->aweme_detail->statistics->comment_count;
-        $source->collect_count = $res->aweme_detail->statistics->collect_count;
-        $source->like_count = $res->aweme_detail->statistics->digg_count;
-        $source->play_count = $res->aweme_detail->statistics->play_count;
-        $source->share_count = $res->aweme_detail->statistics->share_count;
-        $source->other_share_count = json_encode((object)[
-                                        'whatsapp_share_count' => $res->aweme_detail->statistics->whatsapp_share_count
-        ]);
-        $source->caption = $res->aweme_detail->desc;
-        $source->thumbnail = $res->aweme_detail->video->cover->url_list[0];
-        $source->created_at = \Carbon\Carbon::parse($res->aweme_detail->create_time);
+        if (isset($res->aweme_detail)) {
+            $source->comment_count = $res->aweme_detail->statistics->comment_count;
+            $source->collect_count = $res->aweme_detail->statistics->collect_count;
+            $source->like_count = $res->aweme_detail->statistics->digg_count;
+            $source->play_count = $res->aweme_detail->statistics->play_count;
+            $source->share_count = $res->aweme_detail->statistics->share_count;
+            $source->other_share_count = json_encode((object)[
+                                            'whatsapp_share_count' => $res->aweme_detail->statistics->whatsapp_share_count
+            ]);
+            $source->caption = substr($res->aweme_detail->desc, 0, 254);
+            $source->thumbnail = $res->aweme_detail->video->cover->url_list[0];
+            $source->created_at = \Carbon\Carbon::parse($res->aweme_detail->create_time);
+        }
         $source->save();
                     
         return $source;
@@ -221,21 +225,23 @@ class TiktokService
 
 
         if (!$response) {
-            return response()->json([
-                'status' => false,
-            ]);
+            return false;
         }
         $res = json_decode($response);
         // dd($res->userInfo);
-        $creator = Creator::create([
-            'name' => $res->userInfo->user->nickname,
-            'username' => $res->userInfo->user->uniqueId,
-            'thumbnail' => $res->userInfo->user->avatarThumb,
-            'signature' => $res->userInfo->user->signature,
-            'stats' => json_encode($res->userInfo->stats),
-            'channel_id' => $channelId
-        ]);
-        
-        return $creator;
+        if (isset($res->userInfo) && isset($res->userInfo->user->nickname)) {
+            $creator = Creator::create([
+                'name' => $res->userInfo->user->nickname,
+                'username' => $res->userInfo->user->uniqueId,
+                'thumbnail' => $res->userInfo->user->avatarThumb,
+                'signature' => $res->userInfo->user->signature,
+                'stats' => json_encode($res->userInfo->stats),
+                'channel_id' => $channelId
+            ]);
+            
+            return $creator;
+        } else {
+            return false;
+        }
     }
 }
