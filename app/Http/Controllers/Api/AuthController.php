@@ -57,7 +57,7 @@ class AuthController extends Controller
 
             $details = ['otp' => $otp];
 
-            Mail::to('satrahmadi@gmail.com')->send(new otpMail($details));
+            Mail::to($request->email)->send(new otpMail($details));
 
             DB::commit();
 
