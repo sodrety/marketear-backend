@@ -56,11 +56,19 @@ class WorkspaceService
                     })->first();
                     $sourceId = explode('/', $url)[4];
                 }
-                
-                WorkspaceUrl::create(['url' => $url, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id]);
-
-                if ($data['type'] == 'Campaign') {
-                    CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => $creator ? $creator->id : 0]);
+                if (isset($url->id)) {
+                    WorkspaceUrl::find($url->id);
+                } else {
+                    WorkspaceUrl::create([
+                        'url' => $url, 
+                        'workspace_id' => $id, 
+                        'channel_id' => $selectedChannel->id]);
+                }
+                if ($data['type'] == 'campaign') {
+                    $source = CampaignSource::where('url',$sourceId)->where('workspace_id', $id)->first();
+                    if (!$source) {
+                        CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => $creator ? $creator->id : 0]);
+                    }
                 }
             }
 

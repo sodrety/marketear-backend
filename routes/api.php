@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->prefix('workspace')->group(function () {
     Route::get('/creator/{username}', [WorkspaceController::class, 'getCreator']);
     Route::put('/update/{id}', [WorkspaceController::class,'update']);
     Route::post('/delete/{id}', [WorkspaceController::class,'deleteWorkspace']);
+    Route::put('/update/comment/{id}', [WorkspaceController::class,'updateIntent']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);

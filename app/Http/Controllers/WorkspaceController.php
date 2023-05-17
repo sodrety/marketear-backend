@@ -8,6 +8,7 @@ use App\Models\Creator;
 use App\Models\Workspace;
 use App\Models\WorkspaceCategory;
 use App\Services\WorkspaceService;
+use App\Models\Intent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,11 @@ class WorkspaceController extends Controller
 
     public function getWorkspace ()
     {
-        $data = Workspace::with('category','channels','urls','sources')->get();
+        if (Auth::user()->role_id == 1) {
+            $data = Workspace::with('category','channels','urls','sources')->get();
+        } else {
+            $data = Workspace::where('user_id',Auth::user()->id)->with('category','channels','urls','sources')->get();
+        }
         return response()->json($data,200);
     }
 
@@ -106,6 +111,31 @@ class WorkspaceController extends Controller
         }
     }
 
+    public function updateIntent (Request $request, $id)
+    {
+        $validated_array = [
+            'sentiment' => 'required',
+        ];
+        $validated = Validator::make($request->all(), $validated_array);
+        if ($validated->fails()) {
+            return response()->json($validated->errors(), 500);
+        } else {
+            try {
+                $comment = Intent::find($id);
+                $comment->sentiment = $request->sentiment;
+                $comment->save();
+
+                return response()->json([
+                    'status' => true,
+                    'message' => $comment
+                ], 200);
+            } catch (\Exception $e) {
+                return response()->json($e->getMessage(), 500);
+            }
+    
+        }
+    }
+
     public function deleteWorkspace ($id)
     {
         try {
@@ -137,7 +167,7 @@ class WorkspaceController extends Controller
             try {
                 $workspace = $this->workspaceService->createUrl($request->all(), $request->id);
 
-                if ($workspace && $request->type == 'Campaign') {
+                if ($workspace && $request->type == 'campaign') {
                     $queue = new SrapeSource($request->id);
                     $this->dispatch($queue);
                 }
@@ -156,10 +186,20 @@ class WorkspaceController extends Controller
     public function reintent (Request $request)
     {
         if ($request->id) {
+            $workspace = Workspace::find($request->id);
             try{
-                $queue = new SrapeSource($request->id);
-                $this->dispatch($queue);
-                return response()->json('finish', 200);
+                $createUrl = $this->workspaceService->createUrl(
+                    ['url' => $workspace->urls,
+                    'type' => $workspace->type], 
+                    $request->id);
+                if ($createUrl && $workspace->type == 'campaign') {
+                    $queue = new SrapeSource($request->id);
+                    $this->dispatch($queue);
+                }
+                return response()->json([
+                    'status' => true,
+                    'message' => $createUrl
+                ], 200);
             } catch (\Exception $e) {
                 return response()->json($e->getMessage(), 500);
             }
