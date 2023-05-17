@@ -27,7 +27,11 @@ class WorkspaceController extends Controller
 
     public function getWorkspace ()
     {
-        $data = Workspace::with('category','channels','urls','sources')->get();
+        if (Auth::user()->role_id == 1) {
+            $data = Workspace::with('category','channels','urls','sources')->get();
+        } else {
+            $data = Workspace::where('user_id',Auth::user()->id)->with('category','channels','urls','sources')->get();
+        }
         return response()->json($data,200);
     }
 
