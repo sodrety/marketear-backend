@@ -8,11 +8,10 @@ use App\Models\WorkspaceUrl;
 use App\Models\Channel;
 use App\Models\CampaignSource;
 use App\Models\Creator;
-use Auth;
 
 class WorkspaceService
 {
-    public function createWorkspace($data)
+    public function createWorkspace($data, $user)
     {
         try {
             DB::beginTransaction();
@@ -20,7 +19,7 @@ class WorkspaceService
                     'name' => $data['name'],
                     'type' => $data['type'],
                     'category_id' => $data['category'],
-                    'user_id' => Auth::user()->id
+                    'user_id' => $user->id
                 ]);
 
                 if ($workspace) {
@@ -37,43 +36,47 @@ class WorkspaceService
     public function createUrl($data, $id = null)
     {
         if ($id) {
-            DB::beginTransaction();
-            
-            $channel = Channel::all();
-            
-            $selec = collect($channel);
-            foreach($data['url'] as $url) {
-                if(strpos($url, 'tiktok')) {
-                    $selectedChannel = $selec->filter(function($item) {
-                        return $item->name == 'tiktok';
-                    })->first();
-                    $sourceId = explode('/', $url)[5];
-                    $username = trim(explode('/', $url)[3], '@');
-                    $creator = $this->_checkCreator($username, $selectedChannel->id);
-                } else {
-                    $selectedChannel = $selec->filter(function($item) {
-                        return $item->name == 'instagram';
-                    })->first();
-                    $sourceId = explode('/', $url)[4];
-                }
-                if (isset($url->id)) {
-                    WorkspaceUrl::find($url->id);
-                } else {
-                    WorkspaceUrl::create([
-                        'url' => $url, 
-                        'workspace_id' => $id, 
-                        'channel_id' => $selectedChannel->id]);
-                }
-                if ($data['type'] == 'campaign') {
-                    $source = CampaignSource::where('url',$sourceId)->where('workspace_id', $id)->first();
-                    if (!$source) {
-                        CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => $creator ? $creator->id : 0]);
+            try {
+                DB::beginTransaction();
+                
+                $channel = Channel::all();
+                
+                $selec = collect($channel);
+                foreach($data['url'] as $url) {
+                    if(strpos($url, 'tiktok')) {
+                        $selectedChannel = $selec->filter(function($item) {
+                            return $item->name == 'tiktok';
+                        })->first();
+                        $sourceId = explode('/', $url)[5];
+                        $username = trim(explode('/', $url)[3], '@');
+                        $creator = $this->_checkCreator($username, $selectedChannel->id);
+                    } else {
+                        $selectedChannel = $selec->filter(function($item) {
+                            return $item->name == 'instagram';
+                        })->first();
+                        $sourceId = explode('/', $url)[4];
+                    }
+                    
+                    $workspaceurl = WorkspaceUrl::where('url',$url)->where('workspace_id', $id)->first();
+                    if (!$workspaceurl) {
+                        WorkspaceUrl::create([
+                            'url' => $url, 
+                            'workspace_id' => $id, 
+                            'channel_id' => $selectedChannel->id]);
+                    }
+                    if ($data['type'] == 'campaign') {
+                        $source = CampaignSource::where('url',$sourceId)->where('workspace_id', $id)->first();
+                        if (!$source) {
+                            CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => ($creator ? $creator->id : 0)]);
+                        }
                     }
                 }
-            }
 
-            DB::commit();
-            return true;
+                DB::commit();
+                return true;
+            } catch (\Throwable $th) {
+                throw $th;
+            }
         } else {
             return false;
         }

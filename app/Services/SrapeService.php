@@ -36,6 +36,7 @@ class SrapeService
         }
         
         if(!$intent || (is_array($intent) && count($intent) < 1)) {
+            Log::info($intent);
             return response()->json([
                 'status' => false,
             ], 500);
