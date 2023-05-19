@@ -71,13 +71,13 @@ class UsersController extends Controller
                     'errors' => $validateUser->errors()
                 ], 401);
             }
-
+            $now = Carbon::now();
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make('password'),
                 'role_id' => $request->role,
-                'email_verified_at' => Carbon::now(),
+                'email_verified_at' => $now,
                 'status' => $request->status
             ]);
 
@@ -86,6 +86,24 @@ class UsersController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => $user,
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function removeUser ($id)
+    {
+        try {
+            $users = User::findOrFail($id);
+            $users->delete();
+            return response()->json([
+                'status' => true,
+                'message' => $users
             ], 200);
 
         } catch (\Throwable $th) {

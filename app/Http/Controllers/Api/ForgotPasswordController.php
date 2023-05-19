@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Carbon\Carbon; 
 use App\Models\User; 
 use App\Models\ForgotPassword;
@@ -63,7 +64,15 @@ class ForgotPasswordController extends Controller
                 $validateUser = Validator::make($request->all(), 
                 [
                     'email' => 'required|email|exists:users,email',
-                    'password' => 'required|confirmed|min:8',
+                    'password' => [
+                        'required',
+                        Password::min(8)
+                            ->letters()
+                            ->mixedCase()
+                            ->numbers()
+                            // ->uncompromised()
+                    ],
+                    'password_confirmation' => 'required|same:password',
                     'token' => 'required'
                 ]);
 

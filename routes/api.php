@@ -32,6 +32,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/verifyotp', [AuthController::class, 'verifyOtp'])->middleware('auth:sanctum');
     Route::get('/generateotp', [AuthController::class, 'generateOtp'])->middleware('auth:sanctum');
     Route::put('/profile', [AuthController::class, 'updateUser'])->middleware('auth:sanctum');
+    Route::put('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
     Route::post('/forget-password', [ForgotPasswordController::class, 'submitForgetPasswordForm'])->name('forget.password.post'); 
     Route::post('/reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
@@ -69,6 +70,7 @@ Route::middleware('auth:sanctum')->prefix('users')->group(function () {
     Route::get('/roles',[UsersController::class, 'roles']);
     Route::get('/list',[UsersController::class, 'list']);
     Route::post('/add',[UsersController::class, 'create']);
+    Route::get('/remove/{id}',[UsersController::class, 'removeUser']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);
