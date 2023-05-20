@@ -10,7 +10,7 @@ class Workspace extends Model
     use HasFactory;
     protected $guarded = [];
 
-    protected $fillable = ['name', 'category_id', 'type'];
+    protected $fillable = ['name', 'category_id', 'type', 'user_id'];
 
     protected $table = 'workspaces';
 
