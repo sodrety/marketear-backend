@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CampaignSource;
 use App\Models\Creator;
 use App\Models\Intent;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class TiktokService 
@@ -20,7 +21,8 @@ class TiktokService
                 ];
             })
             ->toArray();
-
+            
+            Log::info($data);
             return $sour;
         }
 
@@ -137,7 +139,7 @@ class TiktokService
             $err = curl_error($curl);
     
             curl_close($curl);
-    
+            Log::info($url);
             if ($err) {
                 LogService::record([
                     'request' => "",
@@ -163,6 +165,7 @@ class TiktokService
         }
         $res = json_decode($response);
         
+        Log::info($response);
         $source = CampaignSource::where('id', $data['id'])->first();
         if (isset($res->aweme_detail)) {
             $source->comment_count = $res->aweme_detail->statistics->comment_count;

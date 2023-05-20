@@ -67,7 +67,7 @@ class WorkspaceController extends Controller
             return response()->json($validated->errors(), 500);
         } else {
             try {
-                $workspace = $this->workspaceService->createWorkspace($request->all());
+                $workspace = $this->workspaceService->createWorkspace($request->all(), Auth::user());
 
                 if ($workspace && $workspace->type == 'campaign') {
                     $queue = new SrapeSource($workspace->id);
@@ -189,7 +189,7 @@ class WorkspaceController extends Controller
             $workspace = Workspace::find($request->id);
             try{
                 $createUrl = $this->workspaceService->createUrl(
-                    ['url' => $workspace->urls,
+                    ['url' => $workspace->urls->pluck('url'),
                     'type' => $workspace->type], 
                     $request->id);
                 if ($createUrl && $workspace->type == 'campaign') {

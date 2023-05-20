@@ -27,7 +27,15 @@ class User extends Authenticatable
         'password',
         'role_id',
         'google_id',
-        'facebook_id'
+        'facebook_id',
+        'image',
+        'phone',
+        'title',
+        'description',
+        'status',
+        'job',
+        'company',
+        'workspace_id'
     ];
 
     /**

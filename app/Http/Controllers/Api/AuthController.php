@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Validation\Rules\Password;
 use Carbon\Carbon;
 use Auth;
 use Mail;
@@ -240,8 +241,7 @@ class AuthController extends Controller
             DB::beginTransaction();
             $validateUser = Validator::make($request->all(), 
             [
-                'name' => 'required',
-                'password' => 'nullable|min:8',
+                'name' => 'required'
             ]);
 
             if($validateUser->fails()){
@@ -253,8 +253,7 @@ class AuthController extends Controller
             }
 
             $user = User::firstWhere('email',Auth::user()->email)->update([
-                'name' => $request->name,
-                'password' => $request->password ? Hash::make($request->password) : Auth::user()->password,
+                'name' => $request->name
             ]);
 
             DB::commit();
@@ -262,6 +261,56 @@ class AuthController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => $user,
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function changePassword(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+                $validateUser = Validator::make($request->all(), 
+                [
+                    'old_password' => ['required',
+                        function ($attribute, $value, $fail) {
+                            if (!Hash::check($value, Auth::user()->password)) {
+                                $fail('Old Password didn\'t match');
+                            }
+                        }
+                    ],
+                    'password' => [
+                        'required',
+                        Password::min(8)
+                            ->letters()
+                            ->mixedCase()
+                            ->numbers()
+                            // ->uncompromised()
+                    ],
+                    'password_confirmation' => 'required|same:password'
+                ]);
+
+                if($validateUser->fails()){
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'validation error',
+                        'errors' => $validateUser->errors()
+                    ], 401);
+                }
+
+                $user = User::find(Auth::user()->id);
+                $user->password = Hash::make($request->password);
+                $user->save();
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Your password has been changed!',
             ], 200);
 
         } catch (\Throwable $th) {

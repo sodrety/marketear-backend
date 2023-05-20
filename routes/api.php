@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\TiktokController;
 use App\Http\Controllers\WorkspaceController;
@@ -24,17 +25,20 @@ Broadcast::routes(['middleware' => ['auth:sanctum']]);
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::post('/auth/register', [AuthController::class, 'createUser']);
-Route::post('/auth/login', [AuthController::class, 'loginUser']);
-Route::post('/auth/logout', [AuthController::class, 'logoutUser']);
-Route::post('/auth/verifyotp', [AuthController::class, 'verifyOtp'])->middleware('auth:sanctum');
-Route::get('/auth/generateotp', [AuthController::class, 'generateOtp'])->middleware('auth:sanctum');
-Route::put('/auth/profile', [AuthController::class, 'updateUser'])->middleware('auth:sanctum');
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'createUser']);
+    Route::post('/login', [AuthController::class, 'loginUser']);
+    Route::post('/logout', [AuthController::class, 'logoutUser']);
+    Route::post('/verifyotp', [AuthController::class, 'verifyOtp'])->middleware('auth:sanctum');
+    Route::get('/generateotp', [AuthController::class, 'generateOtp'])->middleware('auth:sanctum');
+    Route::put('/profile', [AuthController::class, 'updateUser'])->middleware('auth:sanctum');
+    Route::put('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
 
-Route::post('/auth/forget-password', [ForgotPasswordController::class, 'submitForgetPasswordForm'])->name('forget.password.post'); 
-Route::post('/auth/reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
+    Route::post('/forget-password', [ForgotPasswordController::class, 'submitForgetPasswordForm'])->name('forget.password.post'); 
+    Route::post('/reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
 
-Route::get('/auth/social', [AuthController::class, 'handleProviderCallback']);
+    Route::get('/social', [AuthController::class, 'handleProviderCallback']);
+});
 
 Route::prefix('tiktok')->group(function() {
     Route::post('/scrape', [TiktokController::class, 'scrape']);
@@ -60,6 +64,13 @@ Route::middleware('auth:sanctum')->prefix('workspace')->group(function () {
     Route::put('/update/{id}', [WorkspaceController::class,'update']);
     Route::post('/delete/{id}', [WorkspaceController::class,'deleteWorkspace']);
     Route::put('/update/comment/{id}', [WorkspaceController::class,'updateIntent']);
+});
+
+Route::middleware('auth:sanctum')->prefix('users')->group(function () {
+    Route::get('/roles',[UsersController::class, 'roles']);
+    Route::get('/list',[UsersController::class, 'list']);
+    Route::post('/add',[UsersController::class, 'create']);
+    Route::get('/remove/{id}',[UsersController::class, 'removeUser']);
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);
