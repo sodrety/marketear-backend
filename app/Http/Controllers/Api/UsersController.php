@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Role;
 use Carbon\Carbon;
@@ -33,10 +34,10 @@ class UsersController extends Controller
         }
     }
 
-    public function list ()
+    public function list (Request $request)
     {
         try {
-            $users = User::get();
+            $users = $request->admin ? User::where('role_id','<',2)->get() : User::where('role_id','>',1)->get();
             return response()->json([
                 'status' => true,
                 'message' => $users
@@ -59,7 +60,7 @@ class UsersController extends Controller
             $validateUser = Validator::make($request->all(), 
             [
                 'name' => 'required',
-                'email' => 'required|email|unique:users,email',
+                'email' => 'required|email:rfc,dns|unique:users,email',
                 'phone' => 'numeric',
                 'role' => 'required'
             ]);
@@ -74,7 +75,7 @@ class UsersController extends Controller
             $now = Carbon::now();
             $user = User::create([
                 'name' => $request->name,
-                'email' => $request->email,
+                'email' => Str::lower($request->email),
                 'password' => Hash::make('password'),
                 'role_id' => $request->role,
                 'email_verified_at' => $now,
