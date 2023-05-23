@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Auth;
 use Mail;
@@ -27,8 +28,26 @@ class AuthController extends Controller
             $validateUser = Validator::make($request->all(), 
             [
                 'name' => 'required',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|confirmed|min:8',
+                'email' => [
+                    'required',
+                    'email:rfc,dns',
+                    'unique:users,email',
+                    function ($attribute, $value, $fail) {
+                        $user = User::where('email',Str::lower($value))->first();
+                        if ($user) {
+                            $fail('Email already used');
+                        }
+                    },
+                ],
+                'password' => [
+                    'required',
+                    Password::min(8)
+                        ->letters()
+                        ->mixedCase()
+                        ->numbers()
+                        // ->uncompromised()
+                ],
+                'password_confirmation' => 'required|same:password',
                 'term' => 'accepted'
             ]);
 
@@ -42,9 +61,10 @@ class AuthController extends Controller
 
             $user = User::create([
                 'name' => $request->name,
-                'email' => $request->email,
+                'email' => Str::lower($request->email),
                 'password' => Hash::make($request->password),
                 'role_id' => 2,
+                'status' => 1,
                 'email_verified_at' => null
             ]);
 
@@ -62,9 +82,23 @@ class AuthController extends Controller
 
             DB::commit();
 
+            if(!Auth::attempt($request->only(['email', 'password']))){
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email & Password does not match with our record.',
+                ], 401);
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'User Created Successfully',
+                'data' => [
+                    'user' => [
+                        'name' => $user->name,
+                        'email' => $user->email
+                    ],
+                    'token' => $user->createToken("API TOKEN")->plainTextToken
+                ],
             ], 200);
 
         } catch (\Throwable $th) {
@@ -85,7 +119,16 @@ class AuthController extends Controller
         try {
             $validateUser = Validator::make($request->all(), 
             [
-                'email' => 'required|email',
+                'email' => [
+                    'required',
+                    'email:rfc,dns',
+                    function ($attribute, $value, $fail) {
+                        $user = User::where('email',$value)->first();
+                        if ($user && !$user->status) {
+                            $fail('Akun anda sedang dinonaktifkan');
+                        }
+                    },
+                ],
                 'password' => 'required'
             ]);
 
@@ -104,7 +147,7 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $user = User::where('email', $request->email)->first();
+            $user = User::where('email', Str::lower($request->email))->first();
 
             return response()->json([
                 'status' => true,
@@ -156,6 +199,7 @@ class AuthController extends Controller
             $verificationCode->delete();
             
             $user->email_verified_at = $now;
+            $user->status = 1;
             $user->save();
 
             return response()->json([
@@ -198,7 +242,7 @@ class AuthController extends Controller
 
             $details = ['otp' => $otp];
 
-            Mail::to('satrahmadi@gmail.com')->send(new otpMail($details));
+            Mail::to(Auth::user()->email)->send(new otpMail($details));
 
             DB::commit();
 
@@ -325,12 +369,28 @@ class AuthController extends Controller
     {
         try {
             $s_user = Socialite::with($request->provider)->stateless()->userFromToken($request->access_token);
-            $user = $this->findOrCreateUser($s_user, $request->provider);
-            if($request->login) $user->createToken("API TOKEN")->plainTextToken;
-            return response()->json([
-                'status' => true,
-                'message' => $user
-            ], 200);
+            $message = [];
+            if ($s_user && $s_user->getEmail()) {
+                $user = $this->findOrCreateUser($s_user, $request->provider);
+                if ($user) {
+                    $message = [
+                        'user' => [
+                            'name' => $user->name,
+                            'email' => $user->email
+                        ],
+                        'token' => $user->createToken("API TOKEN")->plainTextToken
+                    ];
+                }
+                return response()->json([
+                    'status' => true,
+                    'message' => $message
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'User Not Found'
+                ], 403);
+            }
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -342,12 +402,11 @@ class AuthController extends Controller
     private function findOrCreateUser($socialLiteUser, $provider)
     {
         $user = User::firstOrNew([
-            'email' => $socialLiteUser->email,
+            'email' => $socialLiteUser->getEmail(),
         ], [
-            'email' => $socialLiteUser->email,
-            $provider.'_id' => $socialLiteUser->id,
+            $provider.'_id' => $socialLiteUser->getId(),
             'role_id' => 2,
-            'name' => $socialLiteUser->name,
+            'name' => $socialLiteUser->getName(),
             'password' => Hash::make('default_password')
         ]);
 
