@@ -285,7 +285,8 @@ class AuthController extends Controller
             DB::beginTransaction();
             $validateUser = Validator::make($request->all(), 
             [
-                'name' => 'required'
+                'name' => 'required',
+                'avatar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
             ]);
 
             if($validateUser->fails()){
@@ -293,11 +294,26 @@ class AuthController extends Controller
                     'status' => false,
                     'message' => 'validation error',
                     'errors' => $validateUser->errors()
-                ], 401);
+                ], 403);
             }
 
+            $image = null;
+
+            if($request->file('avatar')) {
+                // check if user has an existing avatar
+                if(Auth::user()->image != NULL){
+                  // delete existing image file
+                  \Storage::disk('public')->delete(Auth::user()->image);
+                }
+            
+                // processing the uploaded image
+                $avatar_name = Str::random(20).'.'.$request->file('avatar')->getClientOriginalExtension();
+                $image = $request->file('avatar')->storeAs('avatar',$avatar_name, 'public');
+            }            
+
             $user = User::firstWhere('email',Auth::user()->email)->update([
-                'name' => $request->name
+                'name' => $request->name,
+                'image' => url('storage/'.$image)
             ]);
 
             DB::commit();
