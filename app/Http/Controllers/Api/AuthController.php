@@ -313,7 +313,7 @@ class AuthController extends Controller
 
             $user = User::firstWhere('email',Auth::user()->email)->update([
                 'name' => $request->name,
-                'image' => url('storage/'.$image
+                'image' => url('storage/'.$image)
             ]);
 
             DB::commit();
