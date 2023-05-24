@@ -1,11 +1,11 @@
-name: Laravel
+name: Backend Deployment
 
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  laravel-tests:
+  deploymeny\t:
 
     runs-on: ubuntu-latest
 
