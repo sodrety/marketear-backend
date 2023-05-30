@@ -43,31 +43,33 @@ class WorkspaceService
                 
                 $selec = collect($channel);
                 foreach($data['url'] as $url) {
-                    if(strpos($url, 'tiktok')) {
-                        $selectedChannel = $selec->filter(function($item) {
-                            return $item->name == 'tiktok';
-                        })->first();
-                        $sourceId = explode('/', $url)[5];
-                        $username = trim(explode('/', $url)[3], '@');
-                        $creator = $this->_checkCreator($username, $selectedChannel->id);
-                    } else {
-                        $selectedChannel = $selec->filter(function($item) {
-                            return $item->name == 'instagram';
-                        })->first();
-                        $sourceId = explode('/', $url)[4];
-                    }
-                    
-                    $workspaceurl = WorkspaceUrl::where('url',$url)->where('workspace_id', $id)->first();
-                    if (!$workspaceurl) {
-                        WorkspaceUrl::create([
-                            'url' => $url, 
-                            'workspace_id' => $id, 
-                            'channel_id' => $selectedChannel->id]);
-                    }
-                    if ($data['type'] == 'campaign') {
-                        $source = CampaignSource::where('url',$sourceId)->where('workspace_id', $id)->first();
-                        if (!$source) {
-                            CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => ($creator ? $creator->id : 0)]);
+                    if (isset($url) && (strpos($url, 'tiktok') || strpos($url, 'instagram'))) {
+                        if(strpos($url, 'tiktok')) {
+                            $selectedChannel = $selec->filter(function($item) {
+                                return $item->name == 'tiktok';
+                            })->first();
+                            $sourceId = explode('/', $url)[5];
+                            $username = trim(explode('/', $url)[3], '@');
+                            $creator = $this->_checkCreator($username, $selectedChannel->id);
+                        } else {
+                            $selectedChannel = $selec->filter(function($item) {
+                                return $item->name == 'instagram';
+                            })->first();
+                            $sourceId = explode('/', $url)[4];
+                        }
+                        
+                        $workspaceurl = WorkspaceUrl::where('url',$url)->where('workspace_id', $id)->first();
+                        if (!$workspaceurl) {
+                            WorkspaceUrl::create([
+                                'url' => $url, 
+                                'workspace_id' => $id, 
+                                'channel_id' => $selectedChannel->id]);
+                        }
+                        if ($data['type'] == 'campaign') {
+                            $source = CampaignSource::where('url',$sourceId)->where('workspace_id', $id)->first();
+                            if (!$source) {
+                                CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => ($creator ? $creator->id : 0)]);
+                            }
                         }
                     }
                 }
