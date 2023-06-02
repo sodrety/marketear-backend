@@ -9,10 +9,15 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 use Spatie\Permission\Traits\HasRoles;
+use Bpuig\Subby\Traits\HasSubscriptions;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, 
+    HasFactory, 
+    Notifiable;
+
+    use HasSubscriptions;
 
     use HasRoles;
 

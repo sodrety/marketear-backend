@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
+use Bpuig\Subby\Models\Plan;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -58,7 +59,8 @@ class AuthController extends Controller
                     'errors' => $validateUser->errors()
                 ], 401);
             }
-
+            
+            $plan = Plan::getByTag('free');
             $user = User::create([
                 'name' => $request->name,
                 'email' => Str::lower($request->email),
@@ -67,6 +69,7 @@ class AuthController extends Controller
                 'status' => 1,
                 'email_verified_at' => null
             ]);
+            $user->newSubscription('free', $plan, 'Free', 'Basic');
 
             $otp = rand(123456, 999999);
 
