@@ -6,6 +6,7 @@ use App\Models\CampaignSource;
 use App\Models\Creator;
 use App\Models\Intent;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Exception;
 
 class TiktokService 
@@ -25,14 +26,16 @@ class TiktokService
             Log::info($data);
             return $sour;
         }
+        $plan = Auth::user()->subscriptions;
+        $features = Auth::user()->subscription($plan[0]['tag'])->features;
 
         $data = $this->_postDetail($data);
 
         if (!$data) {
             return false;
         }
-        $target = 10;
-        $per_page = 30;
+        $target = (int)$features[0]->value ?? 10;
+        $per_page = 10;
         $cursor = 0;
         $result = [];
         try {

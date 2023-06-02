@@ -26,11 +26,12 @@ class SubcriptionController extends Controller
     public function getSubscription()
     {
         try {
-            $detail = Auth::user()->subscriptions;
-
+            $plan = Auth::user()->subscriptions;
+            $features = Auth::user()->subscription($plan[0]['tag'])->features;
+            $plan[0]['features'] = $features;
             return response()->json([
                 'status' => true,
-                'data' => $detail
+                'data' => $plan[0]
             ], 200);
         } catch (\Exception $e) {
             return response()->json($e->getMessage(), 500);

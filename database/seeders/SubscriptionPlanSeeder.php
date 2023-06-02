@@ -72,7 +72,7 @@ class SubscriptionPlanSeeder extends Seeder
             ]);
 
             $plan->features()->saveMany([
-                new PlanFeature(['tag' => 'workpace_number', 'name' => 'Workspace', 'value' => $item['workspace'], 'sort_order' => 1]),
+                new PlanFeature(['tag' => 'workspace_number', 'name' => 'Workspace', 'value' => $item['workspace'], 'sort_order' => 1]),
                 new PlanFeature(['tag' => 'url_campaign_number', 'name' => 'URL Campaign', 'value' => $item['url'], 'sort_order' => 10]),
                 new PlanFeature(['tag' => 'comment_number', 'name' => 'Comment Crawl', 'value' => $item['comment'], 'sort_order' => 15])
             ]);
