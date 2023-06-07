@@ -19,34 +19,34 @@ class SubscriptionPlanSeeder extends Seeder
             [
                 'tag' => 'free',
                 'name' => 'Free',
-                'description' => 'Basic',
+                'description' => 'Free',
                 'price' => 0,
                 'workspace' => 1,
                 'url' => 1,
-                'comment' => 100
+                'comment' => 50
             ],
             [
                 'tag' => 'tier-1',
                 'name' => 'Tier 1',
-                'description' => 'Personal',
-                'price' => 100000,
+                'description' => 'Basic',
+                'price' => 99000,
                 'workspace' => 1,
                 'url' => 3,
-                'comment' => 300
+                'comment' => 999999
             ],
             [
                 'tag' => 'tier-2',
                 'name' => 'Tier 2',
-                'description' => '⭐ Startup',
+                'description' => 'Pro',
                 'price' => 300000,
-                'workspace' => 3,
-                'url' => 5,
-                'comment' => 1000
+                'workspace' => 999999,
+                'url' => 15,
+                'comment' => 999999
             ],
             [
                 'tag' => 'tier-3',
                 'name' => 'Tier 3',
-                'description' => 'Enterprise',
+                'description' => 'Super',
                 'price' => 999999,
                 'workspace' => 999999,
                 'url' => 999999,
