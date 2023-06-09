@@ -81,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('subscription')->group(function () {
         Route::get('/plans', [\App\Http\Controllers\Api\SubcriptionController::class, 'getPlans']);
         Route::get('/detail', [\App\Http\Controllers\Api\SubcriptionController::class, 'getSubscription']);
+        Route::get('/change', [\App\Http\Controllers\Api\SubcriptionController::class, 'changeSubscription']);
     });
 
 });

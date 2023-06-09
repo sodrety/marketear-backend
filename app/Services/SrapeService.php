@@ -10,9 +10,11 @@ class SrapeService
 {
 
     protected $tiktokService;
-    public function __construct(TiktokService $tiktokService)
+    protected $instagramService;
+    public function __construct(TiktokService $tiktokService, InstagramService $instagramService)
     {
         $this->tiktokService = $tiktokService;
+        $this->instagramService = $instagramService;
     }
     public function scrape($workspaceId = 79)
     {
@@ -26,7 +28,11 @@ class SrapeService
         foreach($source as $url) {
             // switch($url->channel->name) {
             //     case 'tiktok':
-            if ($url->channel->name == 'tiktok') $response = $this->tiktokService->tiktokScrape($url);
+            if ($url->channel->name == 'tiktok') {
+                $response = $this->tiktokService->tiktokScrape($url);
+            } else if ($url->channel->name == 'instagram') {
+                $response = $this->instagramService->instagramScrape($url);
+            }
                 // break;
                 // case 'instagram':
                 //     $response = $this->tiktokService->tiktokScrape($url);
@@ -47,6 +53,24 @@ class SrapeService
         // if ($predict->failed() || $predict->clientError() || $predict->serverError()) {
         //     $predict->throw()->json();
         // }
+
+        foreach ($intent as $item) {
+            // $predict = Http::withHeaders(['Content-Type' => 'application/json'])
+            //         ->send('POST', env("ML_URL", 'http://localhost:5000')."/api/test-predict", [
+            //             'body' => '{ "text": "'.$item['text'].'" }'
+            //         ])->json();
+
+            // if ($predict->failed() || $predict->clientError() || $predict->serverError()) {
+            //     $predict->throw()->json();
+            // }
+
+            // if ($predict) {
+            //     $comment = \App\Models\Intent::find($item['id']);
+            //     $comment->sentiment = $predict['label'];
+            //     $comment->score = $predict['score'];
+            //     $comment->save();
+            // }
+        }
 
         return response()->json([
             'status' => true,
