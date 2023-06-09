@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Exception;
 
-class TiktokService 
+class InstagramService 
 {
-    public function tiktokScrape($data)
+    public function instagramScrape($data)
     {
         // $post = CampaignSource::where('url', $data['url'])->first();
         if($data['is_scraped'] == 1) {
@@ -39,78 +39,74 @@ class TiktokService
         $cursor = 0;
         $result = [];
         try {
-            while($cursor < $target) {
-                $url = "https://scraptik.p.rapidapi.com/list-comments?aweme_id=".$data['url']."&count=$per_page&cursor=$cursor";
+            $url = "https://simpliers.p.rapidapi.com/api/get/instagram/mediaComments?media_id=".$data['url'];
 
-                $curl = curl_init();
-                curl_setopt_array($curl, [
-                    CURLOPT_URL => $url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_FOLLOWLOCATION => true,
-                    CURLOPT_ENCODING => "",
-                    CURLOPT_MAXREDIRS => 10,
-                    CURLOPT_TIMEOUT => 30,
-                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                    CURLOPT_CUSTOMREQUEST => "GET",
-                    CURLOPT_HTTPHEADER => [
-                        "X-RapidAPI-Host: scraptik.p.rapidapi.com",
-                        "X-RapidAPI-Key: 4ee0227ec3mshc41470e8d641f19p186185jsn3bdd9e9bb203"
-                    ],
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_HTTPHEADER => [
+                    "X-RapidAPI-Host: simpliers.p.rapidapi.com",
+                    "X-RapidAPI-Key: 4ee0227ec3mshc41470e8d641f19p186185jsn3bdd9e9bb203"
+                ],
+            ]);
+    
+            $response = curl_exec($curl);
+            $err = curl_error($curl);
+    
+            curl_close($curl);
+    
+            if ($err) {
+                LogService::record([
+                    'request' => "",
+                    'response' => json_encode($err),
+                    'url' => $url,
                 ]);
-        
-                $response = curl_exec($curl);
-                $err = curl_error($curl);
-        
-                curl_close($curl);
-        
-                if ($err) {
-                    LogService::record([
-                        'request' => "",
-                        'response' => json_encode($err),
-                        'url' => $url,
-                    ]);
-                    return false;
-                }
-                if(!$response) {
-                    return false;
-                }
+                return false;
+            }
+            if(!$response) {
+                return false;
+            }
 
-                $comments = json_decode($response);
-
-                foreach($comments->comments as $c) {
-                    if (isset($c->user)) {
-                        $exist = Intent::where('campaign_source_id',$data['id'])
-                            ->where('nickname',$c->user->nickname)
-                            ->where('cid', $c->cid);
-                           if (!$exist) { 
-                                $intent = Intent::create(
-                                    [
-                                        'campaign_source_id' => $data['id'], 
-                                        'nickname' => $c->user->nickname, 
-                                        'region' => $c->user->region,
-                                        'language' => $c->user->language,
-                                        'picture' => $c->user->avatar_thumb->url_list[0],
-                                        'text' => substr($c->text,0,254),
-                                        'cid' => $c->cid,
-                                        'sentiment' => 'Neutral',
-                                        'score' => 0,
-                                        'comment_at' => date('Y/m/d H:i:s', $c->create_time)
-                                    ]
-                                );
-                            }
+            $comments = json_decode($response);
+            foreach($comments->entries as $c) {
+                if (isset($c) && isset($c->id)) {
+                    $exist = Intent::where('campaign_source_id',$data['id'])
+                        ->where('nickname',$c->owner_username)
+                        ->where('comment_at', $c->created_at)->first();
+                       if (!$exist) { 
+                        $intent = Intent::create(
+                            [
+                                'campaign_source_id' => $data['id'], 
+                                'nickname' => $c->owner_username, 
+                                'region' => null,
+                                'language' => null,
+                                'picture' => $c->owner_profile_picture,
+                                'text' => mb_convert_encoding($c->text, "UTF-8"),
+                                'cid' => null,
+                                'sentiment' => 'Neutral',
+                                'score' => 0,
+                                'comment_at' => $c->created_at 
+                            ]);
                         array_push($result,[
                             'text' => $c->text,
                             'id' => $intent->id
                         ]);
                     }
                 }
-                $cursor+= $per_page;
             }
+            $cursor+= $per_page;
         } catch (Exception $e) {
             LogService::record([
-                'request' => "",
-                'response' => json_encode($e),
-                'url' => "https://scraptik.p.rapidapi.com/list-comments?aweme_id=".$data['url']."&count=$per_page&cursor=$cursor",
+                'request' => "error",
+                'response' => $e,
+                'url' => "https://simpliers.p.rapidapi.com/api/get/instagram/mediaComments?media_id=".$data['url'],
             ]);
             return [];
         }
@@ -125,7 +121,7 @@ class TiktokService
     private function _postDetail($data)
     {
         // $url = "https://scraptik.p.rapidapi.com/get-post?aweme_id=".$data['url'];
-        $url = "https://simpliers.p.rapidapi.com/api/get/tiktok/mediaInfo?media_id=".$data['url'];
+        $url = "https://simpliers.p.rapidapi.com/api/get/instagram/mediaInfo?media_id=".$data['url'];
         try {
             $curl = curl_init();
     
@@ -176,7 +172,12 @@ class TiktokService
         
         Log::info($response);
         $source = CampaignSource::where('id', $data['id'])->first();
-        if (isset($res)) {
+        if (isset($res) && isset($res->id)) {
+            $creator = Creator::where(['username' =>  $res->owner->username, 'channel_id' => 2])->first();
+            if (!$creator) {
+                $creator = $this->register($res->owner->username, 2);
+            }
+            $source->creator_id = $creator->id;
             $source->comment_count = $res->comments_count;
             $source->collect_count = 0;
             $source->like_count = $res->likes_count;
@@ -200,7 +201,7 @@ class TiktokService
             $curl = curl_init();
     
             curl_setopt_array($curl, [
-                CURLOPT_URL => "https://scraptik.p.rapidapi.com/web/get-user?username=$username",
+                CURLOPT_URL => "https://simpliers.p.rapidapi.com/api/get/instagram/userInfo?username=$username",
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_ENCODING => "",
@@ -209,7 +210,7 @@ class TiktokService
                 CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => [
-                    "X-RapidAPI-Host: scraptik.p.rapidapi.com",
+                    "X-RapidAPI-Host: simpliers.p.rapidapi.com",
                     "X-RapidAPI-Key: 4ee0227ec3mshc41470e8d641f19p186185jsn3bdd9e9bb203"
                 ],
             ]);
@@ -222,14 +223,14 @@ class TiktokService
                 LogService::record([
                     'request' => "",
                     'response' => json_encode($err),
-                    'url' => "https://scraptik.p.rapidapi.com/web/get-user?username=$username",
+                    'url' => "https://simpliers.p.rapidapi.com/api/get/instagram/userInfo?username=$username",
                 ]);
             }
         } catch (Exception $e) {
             LogService::record([
                 'request' => "",
                 'response' => json_encode($e),
-                'url' => "https://scraptik.p.rapidapi.com/web/get-user?username=$username",
+                'url' => "https://simpliers.p.rapidapi.com/api/get/instagram/userInfo?username=$username",
             ]);
         }
 
@@ -239,13 +240,13 @@ class TiktokService
         }
         $res = json_decode($response);
         // dd($res->userInfo);
-        if (isset($res->userInfo) && isset($res->userInfo->user->nickname)) {
+        if (isset($res) && isset($res->id)) {
             $creator = Creator::create([
-                'name' => $res->userInfo->user->nickname,
-                'username' => $res->userInfo->user->uniqueId,
-                'thumbnail' => $res->userInfo->user->avatarThumb,
-                'signature' => $res->userInfo->user->signature,
-                'stats' => json_encode($res->userInfo->stats),
+                'name' => $res->name,
+                'username' => $res->username,
+                'thumbnail' => $res->profile_picture,
+                'signature' => $res->bio,
+                'stats' => json_encode($res),
                 'channel_id' => $channelId
             ]);
             

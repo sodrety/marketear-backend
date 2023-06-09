@@ -40,6 +40,7 @@ class WorkspaceService
                 DB::beginTransaction();
                 
                 $channel = Channel::all();
+                $creator = null;
                 
                 $selec = collect($channel);
                 foreach($data['url'] as $url) {
@@ -88,7 +89,7 @@ class WorkspaceService
     {
         $creator = Creator::where(['username' =>  $username, 'channel_id' => $channelId])->first();
         if (!$creator) {
-            $creator = TiktokService::register($username, $channelId);
+            $creator = $channelId == 1 ? TiktokService::register($username, $channelId) : InstagramService::register($username, $channelId);
         }
 
         return $creator;    
