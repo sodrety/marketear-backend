@@ -53,7 +53,7 @@ class InstagramService
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => [
                     "X-RapidAPI-Host: simpliers.p.rapidapi.com",
-                    "X-RapidAPI-Key: 4ee0227ec3mshc41470e8d641f19p186185jsn3bdd9e9bb203"
+                    "X-RapidAPI-Key: ".env('API_ID_KEY')
                 ],
             ]);
     
@@ -136,7 +136,7 @@ class InstagramService
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => [
                     "X-RapidAPI-Host: simpliers.p.rapidapi.com",
-                    "X-RapidAPI-Key: 4ee0227ec3mshc41470e8d641f19p186185jsn3bdd9e9bb203"
+                    "X-RapidAPI-Key: ".env('API_ID_KEY')
                 ],
             ]);
     
@@ -211,7 +211,7 @@ class InstagramService
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => [
                     "X-RapidAPI-Host: simpliers.p.rapidapi.com",
-                    "X-RapidAPI-Key: 4ee0227ec3mshc41470e8d641f19p186185jsn3bdd9e9bb203"
+                    "X-RapidAPI-Key: ".env('API_ID_KEY')
                 ],
             ]);
     
