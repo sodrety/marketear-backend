@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class WorkspaceController extends Controller
@@ -187,21 +189,49 @@ class WorkspaceController extends Controller
     {
         if ($request->id) {
             $workspace = Workspace::find($request->id);
+            $detail = [];
             try{
+                if (!count($workspace->sources)) {
                 $createUrl = $this->workspaceService->createUrl(
                     ['url' => $workspace->urls->pluck('url'),
                     'type' => $workspace->type], 
                     $request->id);
+                } else {
+                    $createUrl = $workspace->sources;
+                }
                 if ($createUrl && $workspace->type == 'campaign') {
                     $queue = new SrapeSource($request->id);
                     $this->dispatch($queue);
                 }
+                
+                foreach($workspace->sources as $each) {
+                    foreach ($each->intents as $item) {
+                        if ($item->sentiment == 'Neutral') {
+                        $predict = Http::withHeaders(['Content-Type' => 'application/json'])
+                                ->send('POST', env("ML_URL", 'http://localhost:5000')."/api/test-predict", [
+                                    'body' => '{ "text": "'.$item->text.'" }'
+                                ])->json();
+            
+                        // if ($predict->failed() || $predict->clientError() || $predict->serverError()) {
+                        //     $predict->throw()->json();
+                        // }
+                            if ($predict) {
+                                array_push($detail,$predict['label']);
+                                $comment = \App\Models\Intent::find($item->id);
+                                $comment->sentiment = $predict['label'];
+                                $comment->score = $predict['score'];
+                                $comment->save();
+                            }
+                        }
+                    }
+                }
                 return response()->json([
                     'status' => true,
-                    'message' => $createUrl
+                    'message' => $detail
                 ], 200);
             } catch (\Exception $e) {
-                return response()->json($e->getMessage(), 500);
+                Log::info($e);
+                return response()->json($e, 500);
             }
         } else {
             return response()->json('no id', 500);
