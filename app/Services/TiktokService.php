@@ -41,7 +41,7 @@ class TiktokService
         try {
             while($cursor < $target) {
                 $url = "https://scraptik.p.rapidapi.com/list-comments?aweme_id=".$data['url']."&count=$per_page&cursor=$cursor";
-
+                
                 $curl = curl_init();
                 curl_setopt_array($curl, [
                     CURLOPT_URL => $url,
@@ -62,16 +62,12 @@ class TiktokService
                 $err = curl_error($curl);
         
                 curl_close($curl);
-        
                 if ($err) {
                     LogService::record([
                         'request' => "",
                         'response' => json_encode($err),
                         'url' => $url,
                     ]);
-                    return false;
-                }
-                if(!$response) {
                     return false;
                 }
 
@@ -81,7 +77,7 @@ class TiktokService
                     if (isset($c->user)) {
                         $exist = Intent::where('campaign_source_id',$data['id'])
                             ->where('nickname',$c->user->nickname)
-                            ->where('cid', $c->cid);
+                            ->where('cid', $c->cid)->first();
                            if (!$exist) { 
                                 $intent = Intent::create(
                                     [
@@ -102,6 +98,34 @@ class TiktokService
                                     'id' => $intent->id
                                 ]);
                             }
+
+                        if (isset($c->reply_comment) && count($c->reply_comment)) {
+                            foreach($c->reply_comment as $d){
+                                $exist = Intent::where('campaign_source_id',$data['id'])
+                                    ->where('nickname',$d->user->nickname)
+                                    ->where('cid', $d->cid)->first();
+                                if (!$exist) { 
+                                        $intent = Intent::create(
+                                            [
+                                                'campaign_source_id' => $data['id'], 
+                                                'nickname' => $d->user->nickname, 
+                                                'region' => $d->user->region,
+                                                'language' => $d->user->language,
+                                                'picture' => $d->user->avatar_thumb->url_list[0],
+                                                'text' => substr($c->text,0,254),
+                                                'cid' => $d->cid,
+                                                'sentiment' => 'Neutral',
+                                                'score' => 0,
+                                                'comment_at' => date('Y/m/d H:i:s', $d->create_time)
+                                            ]
+                                        );
+                                        array_push($result,[
+                                            'text' => $d->text,
+                                            'id' => $intent->id
+                                        ]);
+                                    }
+                            }
+                        }
                     }
                 }
                 $cursor+= $per_page;
