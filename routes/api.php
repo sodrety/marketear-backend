@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\ForgotPasswordController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\TiktokController;
-use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\ProjectController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Services\SrapeService;
@@ -57,18 +57,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/report', [CampaignController::class, 'report']);
     });
 
-    Route::prefix('workspace')->group(function () {
-        Route::post('/create', [WorkspaceController::class, 'create']);
-        Route::post('/url-create', [WorkspaceController::class, 'createUrl']);
-        Route::get('/categories',[WorkspaceController::class, 'getCategory']);
-        Route::get('/list', [WorkspaceController::class, 'getWorkspace']);
-        Route::get('/reintent', [WorkspaceController::class, 'reintent']);
-        Route::get('/recreator', [WorkspaceController::class, 'recreator']);
-        Route::get('/detail/{id}', [WorkspaceController::class, 'getDetail']);
-        Route::get('/creator/{username}', [WorkspaceController::class, 'getCreator']);
-        Route::put('/update/{id}', [WorkspaceController::class,'update']);
-        Route::post('/delete/{id}', [WorkspaceController::class,'deleteWorkspace']);
-        Route::put('/update/comment/{id}', [WorkspaceController::class,'updateIntent']);
+    Route::prefix('project')->group(function () {
+        Route::post('/create', [ProjectController::class, 'create']);
+        Route::post('/url-create', [ProjectController::class, 'createUrl']);
+        Route::get('/categories',[ProjectController::class, 'getCategory']);
+        Route::get('/list', [ProjectController::class, 'getProject']);
+        Route::get('/reintent', [ProjectController::class, 'reintent']);
+        Route::get('/recreator', [ProjectController::class, 'recreator']);
+        Route::get('/detail/{id}', [ProjectController::class, 'getDetail']);
+        Route::get('/creator/{username}', [ProjectController::class, 'getCreator']);
+        Route::put('/update/{id}', [ProjectController::class,'update']);
+        Route::post('/delete/{id}', [ProjectController::class,'deleteProject']);
+        Route::put('/update/comment/{id}', [ProjectController::class,'updateIntent']);
     });
 
     Route::prefix('users')->group(function () {

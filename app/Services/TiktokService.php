@@ -54,7 +54,7 @@ class TiktokService
                     CURLOPT_CUSTOMREQUEST => "GET",
                     CURLOPT_HTTPHEADER => [
                         "X-RapidAPI-Host: scraptik.p.rapidapi.com",
-                        "X-RapidAPI-Key: ".env('API_ID_KEY')
+                        "X-RapidAPI-Key: 5fd34f9805mshf80f6cec6e053fcp15dad1jsne9a5a059b7eb"
                     ],
                 ]);
         
@@ -164,7 +164,7 @@ class TiktokService
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => [
                     "X-RapidAPI-Host: simpliers.p.rapidapi.com",
-                    "X-RapidAPI-Key: ".env('API_ID_KEY')
+                    "X-RapidAPI-Key: 5fd34f9805mshf80f6cec6e053fcp15dad1jsne9a5a059b7eb"
                 ],
             ]);
     
@@ -234,7 +234,7 @@ class TiktokService
                 CURLOPT_CUSTOMREQUEST => "GET",
                 CURLOPT_HTTPHEADER => [
                     "X-RapidAPI-Host: scraptik.p.rapidapi.com",
-                    "X-RapidAPI-Key: ".env('API_ID_KEY')
+                    "X-RapidAPI-Key: 5fd34f9805mshf80f6cec6e053fcp15dad1jsne9a5a059b7eb"
                 ],
             ]);
     

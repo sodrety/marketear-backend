@@ -70,6 +70,10 @@ class AuthController extends Controller
                 'email_verified_at' => null
             ]);
             $user->newSubscription('free', $plan, 'Free', 'Basic');
+            \App\Models\Workspace::create([
+                'name' => 'Main Space',
+                'user_id' => $user->id
+            ]);
 
             $otp = rand(123456, 999999);
 

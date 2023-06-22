@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class RecreateColumnCategoryWorkspacesTable extends Migration
+class RecreateColumnCategoryProjectsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,12 @@ class RecreateColumnCategoryWorkspacesTable extends Migration
      */
     public function up()
     {
-        Schema::table('workspaces', function (Blueprint $table) {
+        Schema::table('projects', function (Blueprint $table) {
             $table
             ->foreignId('category_id')
             ->after('type')
             ->references('id')
-            ->on('workspace_categories');
+            ->on('project_categories');
             
             $table->foreignId('user_id')
             ->default(1)
