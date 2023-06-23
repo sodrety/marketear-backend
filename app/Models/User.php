@@ -62,8 +62,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function space() 
+    public function workspace() 
     {
-        return $this->hasOne(Space::class,'user_id','id');
+        return $this->hasOne(Workspace::class,'user_id','id');
     }
 }

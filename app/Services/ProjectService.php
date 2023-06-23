@@ -15,19 +15,19 @@ class ProjectService
     {
         try {
             DB::beginTransaction();
-                $workspace = Project::create([
+                $project = Project::create([
                     'name' => $data['name'],
                     'type' => $data['type'],
                     'category_id' => $data['category'],
                     'user_id' => $user->id
                 ]);
 
-                if ($workspace) {
-                    $this->createUrl($data, $workspace->id);
+                if ($project) {
+                    $this->createUrl($data, $project->id);
                 }
             DB::commit();
 
-            return $workspace;
+            return $project;
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -59,8 +59,8 @@ class ProjectService
                             $sourceId = explode('/', $url)[4];
                         }
                         
-                        $workspaceurl = ProjectUrl::where('url',$url)->where('project_id', $id)->first();
-                        if (!$workspaceurl) {
+                        $projecturl = ProjectUrl::where('url',$url)->where('project_id', $id)->first();
+                        if (!$projecturl) {
                             ProjectUrl::create([
                                 'url' => $url, 
                                 'project_id' => $id, 

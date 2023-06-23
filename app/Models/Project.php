@@ -15,11 +15,11 @@ class Project extends Model
     protected $table = 'projects';
 
     public function category() {
-        return $this->hasOne(WorkspaceCategory::class,'id','category_id');
+        return $this->hasOne(ProjectCategory::class,'id','category_id');
     }
 
     public function urls() {
-        return $this->hasMany(WorkspaceUrl::class);
+        return $this->hasMany(ProjectUrl::class);
     }
 
     public function sources () {
@@ -28,6 +28,6 @@ class Project extends Model
 
     public function channels ()
     {
-        return $this->hasMany(WorkspaceUrl::class)->select('workspace_id','channel_id')->distinct();
+        return $this->hasMany(ProjectUrl::class)->select('project_id','channel_id')->distinct();
     }
 }

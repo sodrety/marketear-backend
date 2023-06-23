@@ -49,6 +49,10 @@ Route::prefix('tiktok')->group(function() {
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::prefix('workspace')->group(function () {
+        Route::get('', [\App\Http\Controllers\WorkspaceController::class, 'getWorkspace']);
+    });
+
     Route::prefix('campaign')->group(function () {
         Route::get('', [CampaignController::class, 'index']);
         Route::get('/{id}', [CampaignController::class, 'detail']);
@@ -67,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/detail/{id}', [ProjectController::class, 'getDetail']);
         Route::get('/creator/{username}', [ProjectController::class, 'getCreator']);
         Route::put('/update/{id}', [ProjectController::class,'update']);
-        Route::post('/delete/{id}', [ProjectController::class,'deleteProject']);
+        Route::post('/delete/{workspace}/{id}', [ProjectController::class,'deleteProject']);
         Route::put('/update/comment/{id}', [ProjectController::class,'updateIntent']);
     });
 

@@ -27,12 +27,19 @@ class ProjectController extends Controller
         $this->projectService = $projectService;
     }
 
-    public function getProject ()
+    public function getProject (Request $request)
     {
         if (Auth::user()->role_id == 1) {
             $data = Project::with('category','channels','urls','sources')->get();
         } else {
-            $data = Project::where('user_id',Auth::user()->id)->with('category','channels','urls','sources')->get();
+            $project = [];
+            if (isset($request->workspace)) {
+                $project = DB::table('workspace_relation')
+                ->where('name','project')
+                ->where('workspace_id', $request->workspace)
+                ->get()->pluck('relation_id');
+            }
+            $data = Project::whereIn('id', $project)->where('user_id',Auth::user()->id)->with('category','channels','urls','sources')->get();
         }
         return response()->json($data,200);
     }
@@ -70,31 +77,23 @@ class ProjectController extends Controller
         } else {
             try {
                 DB::beginTransaction();
-                $space = \App\Models\User::find(Auth::id())->space;
-                if (!$space) {
-                    $space = \App\Models\Project::create([
-                        'name' => 'Main Space',
-                        'user_id' => Auth::id()
-                    ]);
-                }
-                $workspace = $this->projectService->createProject($request->all(), Auth::user());
-                DB::table('spaces_relation')->insert([
-                    'name' => 'workspace',
-                    'space_id' => $space->id,
-                    'relation_id' => $workspace->id
+                $project = $this->projectService->createProject($request->all(), Auth::user());
+                DB::table('workspace_relation')->insert([
+                    'name' => 'project',
+                    'workspace_id' => $request->workspace,
+                    'relation_id' => $project->id
                 ]);
-                if ($workspace && $workspace->type == 'campaign') {
-                    // $queue = new SrapeSource($workspace->id);
+                if ($project && $project->type == 'campaign') {
+                    // $queue = new SrapeSource($project->id);
                     // $this->dispatch($queue);
                 }
                 
                 DB::commit();
                 return response()->json([
                     'status' => true,
-                    'message' => $workspace
+                    'message' => $project
                 ], 200);
             } catch (\Exception $e) {
-                Log::info(\App\Models\User::find(Auth::id())->id);
                 return response()->json($e->getMessage(), 500);
             }
     
@@ -113,12 +112,12 @@ class ProjectController extends Controller
         } else {
             try {
                 $request['category_id'] = $request['category'];
-                $workspace = Project::findOrFail($id);
-                $workspace->update($request->all());
+                $project = Project::findOrFail($id);
+                $project->update($request->all());
 
                 return response()->json([
                     'status' => true,
-                    'message' => $workspace
+                    'message' => $project
                 ], 200);
             } catch (\Exception $e) {
                 return response()->json($e->getMessage(), 500);
@@ -152,15 +151,21 @@ class ProjectController extends Controller
         }
     }
 
-    public function deleteProject ($id)
+    public function deleteProject ($workspace, $id)
     {
         try {
-            $workspace = Project::findOrFail($id);
-            $workspace->delete();
+            $project = Project::findOrFail($id);
+            $project->delete();
+
+            DB::table('workspace_relation')->where(
+                'name', 'project')
+            ->where('workspace_id',$workspace)
+            ->where('relation_id', $id)
+            ->delete();
 
             return response()->json([
                 'status' => true,
-                'message' => $workspace
+                'message' => $project
             ], 200);
         } catch (\Exception $e) {
             return response()->json($e->getMessage(), 500);
@@ -181,16 +186,16 @@ class ProjectController extends Controller
             return response()->json($validated->errors(), 500);
         } else {
             try {
-                $workspace = $this->projectService->createUrl($request->all(), $request->id);
+                $project = $this->projectService->createUrl($request->all(), $request->id);
 
-                if ($workspace && $request->type == 'campaign') {
+                if ($project && $request->type == 'campaign') {
                     $queue = new SrapeSource($request->id);
                     $this->dispatch($queue);
                 }
 
                 return response()->json([
                     'status' => true,
-                    'message' => $workspace
+                    'message' => $project
                 ], 200);
             } catch (\Exception $e) {
                 return response()->json($e->getMessage(), 500);
@@ -202,23 +207,23 @@ class ProjectController extends Controller
     public function reintent (Request $request)
     {
         if ($request->id) {
-            $workspace = Project::find($request->id);
+            $project = Project::find($request->id);
             $detail = [];
             try{
-                if (!count($workspace->sources)) {
+                if (!count($project->sources)) {
                 $createUrl = $this->projectService->createUrl(
-                    ['url' => $workspace->urls->pluck('url'),
-                    'type' => $workspace->type], 
+                    ['url' => $project->urls->pluck('url'),
+                    'type' => $project->type], 
                     $request->id);
                 } else {
-                    $createUrl = $workspace->sources;
+                    $createUrl = $project->sources;
                 }
-                if ($createUrl && $workspace->type == 'campaign') {
+                if ($createUrl && $project->type == 'campaign') {
                     $queue = new SrapeSource($request->id);
                     $this->dispatch($queue);
                 }
                 
-                foreach($workspace->sources as $each) {
+                foreach($project->sources as $each) {
                     foreach ($each->intents as $item) {
                         if ($item->sentiment == 'Neutral') {
                         $predict = Http::withHeaders(['Content-Type' => 'application/json'])
@@ -256,8 +261,8 @@ class ProjectController extends Controller
     {
         if ($request->id) {
             try{
-                $workspace = Project::find($request->id);
-                foreach($workspace->urls as $each) {
+                $project = Project::find($request->id);
+                foreach($project->urls as $each) {
                     if(strpos($each->url, 'tiktok')) {
                         $sourceId = explode('/', $each->url)[5];
                         $username = trim(explode('/', $each->url)[3], '@');
