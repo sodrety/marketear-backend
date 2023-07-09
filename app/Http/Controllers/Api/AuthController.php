@@ -306,7 +306,11 @@ class AuthController extends Controller
 
             $image = null;
 
-            if($request->file('avatar')) {
+            $payload = [
+                'name' => $request->name
+            ];
+
+            if($request->hasFile('avatar')) {
                 // check if user has an existing avatar
                 if(Auth::user()->image != NULL){
                   // delete existing image file
@@ -316,12 +320,10 @@ class AuthController extends Controller
                 // processing the uploaded image
                 $avatar_name = Str::random(20).'.'.$request->file('avatar')->getClientOriginalExtension();
                 $image = $request->file('avatar')->storeAs('avatar',$avatar_name, 'public');
+                $payload['image'] = url('storage/'.$image);
             }            
 
-            $user = User::firstWhere('email',Auth::user()->email)->update([
-                'name' => $request->name,
-                'image' => url('storage/'.$image)
-            ]);
+            $user = User::firstWhere('email',Auth::user()->email)->update($payload);
 
             DB::commit();
 
