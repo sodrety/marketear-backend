@@ -81,6 +81,11 @@ class UsersController extends Controller
                 'email_verified_at' => $now,
                 'status' => $request->status
             ]);
+            
+            \App\Models\Workspace::create([
+                'name' => 'Main Space',
+                'user_id' => $user->id
+            ]);
 
             DB::commit();
 

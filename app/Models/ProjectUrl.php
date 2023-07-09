@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WorkspaceUrl extends Model
+class ProjectUrl extends Model
 {
     use HasFactory;
     protected $fillable = [
         'url',
-        'workspace_id',
+        'project_id',
         'channel_id'
     ];
 
-    protected $table = 'workspace_urls';
+    protected $table = 'project_urls';
 
     public function channel ()
     {

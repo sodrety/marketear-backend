@@ -61,4 +61,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function workspace() 
+    {
+        return $this->hasOne(Workspace::class,'user_id','id');
+    }
 }

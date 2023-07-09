@@ -17,11 +17,11 @@ class CreateIntentsTable extends Migration
         Schema::create('intents', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(CampaignSource::class, 'campaign_source_id');
-            $table->string('nickname')->nullable();
+            $table->text('nickname')->nullable();
             $table->string('region')->nullable();
             $table->string('language')->nullable();
-            $table->string('picture')->nullable();
-            $table->string('text')->nullable();
+            $table->text('picture')->nullable();
+            $table->text('text')->nullable();
             $table->string('cid')->nullable();
             $table->timestamp('comment_at');
             $table->timestamps();

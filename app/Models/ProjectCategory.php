@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WorkspaceCategory extends Model
+class ProjectCategory extends Model
 {
     use HasFactory;
     protected $guarded = [];
 
-    protected $table = 'workspace_categories';
+    protected $table = 'project_categories';
 }

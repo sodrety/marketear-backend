@@ -15,10 +15,16 @@ class CreateWorkspacesTable extends Migration
     {
         Schema::create('workspaces', function (Blueprint $table) {
             $table->id();
-            $table->text('name');
-            $table->enum('type', ['campaign', 'keyword']);
-            $table->foreignId('category_id')->references('id')->on('workspace_categories')->onDelete('cascade');
+            $table->string('name', 100);
+            $table->foreignIdFor(\App\Models\User::class, 'user_id');
             $table->timestamps();
+        });
+
+        Schema::create('workspace_relation', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('workspace_id')->references('id')->on('workspaces');
+            $table->string('name', 100);
+            $table->integer('relation_id');
         });
     }
 
@@ -30,5 +36,6 @@ class CreateWorkspacesTable extends Migration
     public function down()
     {
         Schema::dropIfExists('workspaces');
+        Schema::dropIfExists('workspace_relation');
     }
 }

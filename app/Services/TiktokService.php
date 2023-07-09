@@ -49,7 +49,7 @@ class TiktokService
                     CURLOPT_FOLLOWLOCATION => true,
                     CURLOPT_ENCODING => "",
                     CURLOPT_MAXREDIRS => 10,
-                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_TIMEOUT => 400,
                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
                     CURLOPT_CUSTOMREQUEST => "GET",
                     CURLOPT_HTTPHEADER => [
@@ -64,7 +64,7 @@ class TiktokService
                 curl_close($curl);
                 if ($err) {
                     LogService::record([
-                        'request' => "",
+                        'request' => json_encode($response),
                         'response' => json_encode($err),
                         'url' => $url,
                     ]);
@@ -130,6 +130,9 @@ class TiktokService
                 }
                 $cursor+= $per_page;
             }
+
+            // UPDATE CAMPAIGN SOURCE ID
+            CampaignSource::where('id', $data['id'])->update(['is_scraped' => 1]);
         } catch (Exception $e) {
             LogService::record([
                 'request' => "",
@@ -138,9 +141,6 @@ class TiktokService
             ]);
             return [];
         }
-
-        // UPDATE CAMPAIGN SOURCE ID
-        CampaignSource::where('id', $data['id'])->update(['is_scraped' => 1]);
 
         return $result;
 
@@ -201,6 +201,11 @@ class TiktokService
         Log::info($response);
         $source = CampaignSource::where('id', $data['id'])->first();
         if (isset($res)) {
+            $creator = Creator::where(['username' =>  $res->owner->username, 'channel_id' => 1])->first();
+            if (!$creator) {
+                $creator = $this->register($res->owner->username, 1);
+            }
+            if ($creator) $source->creator_id = $creator->id;
             $source->comment_count = $res->comments_count;
             $source->collect_count = 0;
             $source->like_count = $res->likes_count;
@@ -224,7 +229,7 @@ class TiktokService
             $curl = curl_init();
     
             curl_setopt_array($curl, [
-                CURLOPT_URL => "https://scraptik.p.rapidapi.com/web/get-user?username=$username",
+                CURLOPT_URL => "https://scraptik.p.rapidapi.com/get-user?username=$username",
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_FOLLOWLOCATION => true,
                 CURLOPT_ENCODING => "",
@@ -246,36 +251,40 @@ class TiktokService
                 LogService::record([
                     'request' => "",
                     'response' => json_encode($err),
-                    'url' => "https://scraptik.p.rapidapi.com/web/get-user?username=$username",
+                    'url' => "https://scraptik.p.rapidapi.com/get-user?username=$username",
                 ]);
+            }
+
+
+            if (!$response) {
+                return false;
+            }
+            $res = json_decode($response);
+            Log::info($response);
+            // dd($res->userInfo);
+            if (isset($res->user) && isset($res->user->nickname)) {
+                $creator = Creator::create([
+                    'name' => $res->user->nickname,
+                    'username' => $res->user->unique_id,
+                    'thumbnail' => $res->user->avatar_thumb->url_list[1],
+                    'signature' => $res->user->signature,
+                    'stats' => json_encode([
+                        'follower_count' => $res->user->follower_count,
+                        'following_count' => $res->user->following_count
+                    ]),
+                    'channel_id' => $channelId
+                ]);
+                
+                return $creator;
+            } else {
+                return false;
             }
         } catch (Exception $e) {
             LogService::record([
                 'request' => "",
                 'response' => json_encode($e),
-                'url' => "https://scraptik.p.rapidapi.com/web/get-user?username=$username",
+                'url' => "https://scraptik.p.rapidapi.com/get-user?username=$username",
             ]);
-        }
-
-
-        if (!$response) {
-            return false;
-        }
-        $res = json_decode($response);
-        // dd($res->userInfo);
-        if (isset($res->userInfo) && isset($res->userInfo->user->nickname)) {
-            $creator = Creator::create([
-                'name' => $res->userInfo->user->nickname,
-                'username' => $res->userInfo->user->uniqueId,
-                'thumbnail' => $res->userInfo->user->avatarThumb,
-                'signature' => $res->userInfo->user->signature,
-                'stats' => json_encode($res->userInfo->stats),
-                'channel_id' => $channelId
-            ]);
-            
-            return $creator;
-        } else {
-            return false;
         }
     }
 }

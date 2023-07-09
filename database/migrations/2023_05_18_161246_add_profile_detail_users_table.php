@@ -21,7 +21,7 @@ class AddProfileDetailUsersTable extends Migration
         $table->boolean('status')->default(0)->after('description');
         $table->text('job')->nullable()->after('status');
         $table->text('company')->nullable()->after('job');
-        $table->foreignId('workspace_id')->nullable()->constrained()->after('company');
+        $table->foreignId('project_id')->nullable()->constrained()->after('company');
     });
 }
 
@@ -40,8 +40,8 @@ public function down()
         $table->dropColumn('status');
         $table->dropColumn('job');
         $table->dropColumn('company');
-        $table->dropForeign('workspace_id');
-        $table->dropColumn('workpace_id');
+        $table->dropForeign('project_id');
+        $table->dropColumn('project_id');
     });
 }
 }
