@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateWorkspaceUrlsTable extends Migration
+class CreateProjectUrlsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,11 @@ class CreateWorkspaceUrlsTable extends Migration
      */
     public function up()
     {
-        Schema::create('workspace_urls', function (Blueprint $table) {
+        Schema::create('project_urls', function (Blueprint $table) {
             $table->id();
             $table->string('url');
             $table->boolean('is_scraped')->default(false);
-            $table->foreignId('workspace_id')->references('id')->on('workspaces')->onDelete('cascade');
+            $table->foreignId('project_id')->references('id')->on('projects')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ class CreateWorkspaceUrlsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('workspace_urls');
+        Schema::dropIfExists('project_urls');
     }
 }

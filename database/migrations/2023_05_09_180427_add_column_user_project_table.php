@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddColumnUserWorkspaceTable extends Migration
+class AddColumnUserProjectTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class AddColumnUserWorkspaceTable extends Migration
      */
     public function up()
     {
-        Schema::table('workspaces', function (Blueprint $table) {
+        Schema::table('projects', function (Blueprint $table) {
             $table->foreignId('user_id')
             ->default(1)
             ->after('category_id')
