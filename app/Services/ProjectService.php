@@ -3,31 +3,31 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
-use App\Models\Workspace;
-use App\Models\WorkspaceUrl;
+use App\Models\Project;
+use App\Models\ProjectUrl;
 use App\Models\Channel;
 use App\Models\CampaignSource;
 use App\Models\Creator;
 
-class WorkspaceService
+class ProjectService
 {
-    public function createWorkspace($data, $user)
+    public function createProject($data, $user)
     {
         try {
             DB::beginTransaction();
-                $workspace = Workspace::create([
+                $project = Project::create([
                     'name' => $data['name'],
                     'type' => $data['type'],
                     'category_id' => $data['category'],
                     'user_id' => $user->id
                 ]);
 
-                if ($workspace) {
-                    $this->createUrl($data, $workspace->id);
+                if ($project) {
+                    $this->createUrl($data, $project->id);
                 }
             DB::commit();
 
-            return $workspace;
+            return $project;
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -59,17 +59,17 @@ class WorkspaceService
                             $sourceId = explode('/', $url)[4];
                         }
                         
-                        $workspaceurl = WorkspaceUrl::where('url',$url)->where('workspace_id', $id)->first();
-                        if (!$workspaceurl) {
-                            WorkspaceUrl::create([
+                        $projecturl = ProjectUrl::where('url',$url)->where('project_id', $id)->first();
+                        if (!$projecturl) {
+                            ProjectUrl::create([
                                 'url' => $url, 
-                                'workspace_id' => $id, 
+                                'project_id' => $id, 
                                 'channel_id' => $selectedChannel->id]);
                         }
                         if ($data['type'] == 'campaign') {
-                            $source = CampaignSource::where('url',$sourceId)->where('workspace_id', $id)->first();
+                            $source = CampaignSource::where('url',$sourceId)->where('project_id', $id)->first();
                             if (!$source) {
-                                CampaignSource::create(['url' => $sourceId, 'workspace_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => ($creator ? $creator->id : 0)]);
+                                CampaignSource::create(['url' => $sourceId, 'project_id' => $id, 'channel_id' => $selectedChannel->id, 'creator_id' => ($creator ? $creator->id : 0)]);
                             }
                         }
                     }

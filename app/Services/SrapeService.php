@@ -19,7 +19,7 @@ class SrapeService
     public function scrape($workspaceId = 79)
     {
         // $source = CampaignSource::where("campaign_id", $campaignId)->with('channel')->get();
-        $source = CampaignSource::where("workspace_id", $workspaceId)->with('channel')->get();
+        $source = CampaignSource::where("project_id", $workspaceId)->with('channel')->get();
         if (count($source) < 1) {
             return Log::info("Theres no url to scrape");
         }

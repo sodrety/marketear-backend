@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class CreateWorkspaceCategoriesTable extends Migration
+class CreateProjectCategoriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -15,14 +15,14 @@ class CreateWorkspaceCategoriesTable extends Migration
      */
     public function up()
     {
-        Schema::create('workspace_categories', function (Blueprint $table) {
+        Schema::create('project_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug');
             $table->timestamps();
         });
 
-        DB::table('workspace_categories')->insert([
+        DB::table('project_categories')->insert([
             [
                 'name' => 'Health',
                 'slug' => Str::slug('Health','-'),
@@ -49,6 +49,6 @@ class CreateWorkspaceCategoriesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('workspace_categories');
+        Schema::dropIfExists('project_categories');
     }
 }
