@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ForgotPasswordController;
+use App\Http\Controllers\Api\ScraperController;
 use App\Http\Controllers\Api\UsersController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\TiktokController;
@@ -88,6 +89,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/change', [\App\Http\Controllers\Api\SubcriptionController::class, 'changeSubscription']);
     });
 
+    Route::prefix('scraper')->group(function () {
+        Route::get('/shop/search', [ScraperController::class, 'search']);
+        Route::get('/product/shopee/search', [ScraperController::class, 'searchProduct']);
+    });
+
+    Route::prefix('token')->group(function () {
+        Route::get('/topup-dummy', [ScraperController::class, 'topupDummy']);
+    });
+    
 });
 
 Route::post('test-scrape', [SrapeService::class, 'scrape']);
